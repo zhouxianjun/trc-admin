@@ -42,7 +42,7 @@
     .layout-ceiling-main a{
         color: #9ba7b5;
     }
-    .layout-hide-text{
+    .layout-hide-text .layout-text{
         display: none;
     }
     .ivu-col{
@@ -53,7 +53,7 @@
     <div class="layout" :class="{'layout-hide-text': spanLeft < 5}">
         <Row type="flex">
             <i-col :span="spanLeft" class="layout-menu-left">
-                <Menu active-name="1" @on-select="onSelect" theme="dark" width="auto">
+                <Menu :active-name="activeMenu" @on-select="selectedMenu" theme="dark" width="auto">
                     <div class="layout-logo-left"></div>
                     <self-menu :spanLeft="spanLeft" :iconSize="iconSize" :menu="menu" v-for="menu in menus" :key="menu.id"></self-menu>
                 </Menu>
@@ -65,8 +65,13 @@
                     </i-button>
                 </div>
                 <div class="layout-content" v-bind:style="{height: `${screenHeight}px`}">
-                    <Tabs type="card">
-                        <Tab-pane v-for="tab in tabs" :label="tab.name" :icon="tab.icon" class="layout-content-main">标签一的内容</Tab-pane>
+                    <Tabs type="card" v-model="activeTab" closable @on-click="selectedTab" @on-tab-remove="closeTab">
+                        <Tab-pane name="0" label="首页" :closable="false" class="layout-content-main">
+                            这是首页
+                        </Tab-pane>
+                        <Tab-pane v-for="tab in tabs" :name="`${tab.id}`" :key="tab.id" :label="tab.name" :icon="tab.icon" class="layout-content-main">
+                            <router-view></router-view>
+                        </Tab-pane>
                     </Tabs>
                 </div>
                 <div class="layout-copy">
@@ -77,75 +82,6 @@
     </div>
 </template>
 <script>
-    import Common from '../script/common';
-    import SelfMenu from '../components/menu.vue';
-    export default {
-        data () {
-            return {
-                spanLeft: 5,
-                spanRight: 19,
-                screenHeight: autoHeight(),
-                menus: [{
-                    id: 1,
-                    icon: 'ios-navigate',
-                    name: '菜单一',
-                    sub: [{
-                        id: 2,
-                        icon: 'ios-navigate',
-                        name: '菜单->1',
-                        path: '/a',
-                        pid: 1
-                    }]
-                }],
-                tabs: []
-            }
-        },
-        mounted() {
-            window.onresize = () => {
-                return (() => {
-                    this.screenHeight = autoHeight()
-                })()
-            }
-        },
-        components: {
-            SelfMenu
-        },
-        watch:{
-
-        },
-        computed: {
-            iconSize () {
-                return this.spanLeft === 5 ? 14 : 24;
-            }
-        },
-        methods: {
-            toggleClick () {
-                if (this.spanLeft === 5) {
-                    this.spanLeft = 2;
-                    this.spanRight = 22;
-                } else {
-                    this.spanLeft = 5;
-                    this.spanRight = 19;
-                }
-            },
-            onSelect(selected) {
-                let menu = getMenu(this.menus, selected);
-                this.tabs.push(menu);
-            }
-        }
-    }
-
-    function getMenu(menus, id) {
-        for(let menu of menus) {
-            if (menu.id === id) {return menu}
-            if (menu.sub && menu.sub.length) {
-                let m = getMenu(menu.sub, id);
-                if (m) return m;
-            }
-        }
-    }
-
-    function autoHeight() {
-        return Common.getWindowHeight() - 65 - 65;
-    }
+    import view from '../script/view/index';
+    export default view;
 </script>
