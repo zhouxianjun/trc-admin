@@ -1,0 +1,9 @@
+{
+  "base": "",
+  "port": 8888,
+  "zookeeper": "127.0.0.1:2181",
+  "zookeeperOption": {},
+  "user": "admin",
+  "password": "admin",
+  "root": "rpc"
+}

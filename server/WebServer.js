@@ -5,15 +5,14 @@
 const Utils = require('./Utils');
 const logger = require('tracer-logger');
 const Result = require('./dto/Result');
+const config = require('../config.json');
 const Router = require('koa-router');
 const Static = require('koa-static');
 const bodyParser = require('koa-bodyparser');
 const Koa = require('koa');
 const app = new Koa();
-const router = new Router();
+const router = new Router(config.base);
 const AUTH_PREFIX = 'Basic ';
-const user = `admin`;
-const pwd = `admin`;
 
 //body
 app.use(bodyParser());
@@ -30,7 +29,7 @@ app.use(async (ctx, next) => {
     let authorization = ctx.header['authorization'];
     if (authorization && authorization.length > AUTH_PREFIX.length) {
         logger.debug(`authorization ${authorization}`);
-        if (`${user}:${pwd}` === new Buffer(authorization.substring(AUTH_PREFIX.length), 'base64').toString()) {
+        if (`${config.user}:${config.password}` === new Buffer(authorization.substring(AUTH_PREFIX.length), 'base64').toString()) {
             await next();
             return;
         }
