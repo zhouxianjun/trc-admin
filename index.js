@@ -7,3 +7,4 @@ const App = require('./server/WebServer');
 App.listen(config.port, '0.0.0.0');
 
 // 初始化连接zk
+const ZookeeperOperation = require('./server/ZookeeperOperation');

@@ -24,7 +24,8 @@
     "underscore": "^1.8.3",
     "vue-router": "^2.5.3",
     "walk": "^2.3.9",
-    "watch": "^1.0.2"
+    "watch": "^1.0.2",
+    "minimatch": "latest"
   },
   "devDependencies": {
     "autoprefixer-loader": "^3.2.0",

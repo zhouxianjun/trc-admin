@@ -7,6 +7,7 @@ const watch = require('watch');
 const walk = require('walk');
 const jpath = require('json-path');
 const logger = require('tracer-logger');
+const QS = require('querystring');
 module.exports = class Utils {
     static objVal2Array(obj) {
         let array = [];
@@ -85,6 +86,14 @@ module.exports = class Utils {
             }
         }
         return true;
+    }
+
+    static urlParse(urls) {
+        let result = [];
+        for (let url of urls) {
+            result.push(QS.parse(url));
+        }
+        return result;
     }
 
     static writeResult(ctx, result) {
