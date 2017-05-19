@@ -4,7 +4,14 @@
 'use strict';
 import Common from '../../script/common';
 import SelfMenu from '../../components/menu.vue';
-import Routers from '../router';
+import $ from 'jquery';
+// 引入基本模板
+const echarts = require('echarts/lib/echarts');
+// 引入饼图组件
+require('echarts/lib/chart/pie');
+// 引入提示框和图例组件
+require('echarts/lib/component/tooltip');
+require('echarts/lib/component/legend');
 export default {
     data () {
         return {
@@ -37,15 +44,36 @@ export default {
                     pid: 1
                 }]
             }],
-            tabs: []
+            tabs: [],
+            service: {
+                header: [{title: '服务名称', key: 'name'}],
+                data: []
+            },
+            provider: {
+                header: [{title: '生产者', key: 'name'}],
+                data: []
+            },
+            consumer: {
+                header: [{title: '消费者', key: 'name'}],
+                data: []
+            },
+            address: {
+                header: [{title: '机器', key: 'name'}],
+                data: []
+            }
         }
     },
-    mounted() {
+    async mounted() {
         window.onresize = () => {
             return (() => {
-                this.screenHeight = autoHeight()
+                this.screenHeight = autoHeight();
+                this.tableWidth = this.calcTableWidth();
+                this.pie.resize();
             })()
-        }
+        };
+        // 初始化数据
+        let result = await this.fetch('/index/total');
+        this.updateTableData(result);
     },
     components: {
         SelfMenu
@@ -105,6 +133,12 @@ export default {
                     if (m) return m;
                 }
             }
+        },
+        updateTableData(result) {
+            result.service.forEach(item => {this.service.data.push({name: item})});
+            result.provider.forEach(item => {this.provider.data.push({name: item})});
+            result.consumer.forEach(item => {this.consumer.data.push({name: item})});
+            result.address.forEach(item => {this.address.data.push({name: item})});
         }
     }
 }

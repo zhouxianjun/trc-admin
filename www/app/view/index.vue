@@ -15,6 +15,7 @@
         overflow: hidden;
         background: #fff;
         border-radius: 4px;
+        overflow-y: auto;
     }
     .layout-content-main{
         padding: 0 10px 10px 10px;
@@ -48,6 +49,37 @@
     .ivu-col{
         transition: width .2s ease-in-out;
     }
+    .overview {
+        padding-bottom: 40px;
+    }
+    .overview h1 {
+        font-size: 18px;
+        color: #464c5b;
+        line-height: 24px;
+        padding-bottom: 15px;
+        font-weight: 400;
+    }
+    .overview-box {
+        overflow: hidden;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+        -webkit-box-align: baseline;
+        -ms-flex-align: baseline;
+        align-items: baseline;
+    }
+    .overview-num {
+        float: left;
+        font-size: 32px;
+        color: #464c5b;
+        line-height: 48px;
+        padding-right: 12px;
+    }
+    .overview .ivu-tooltip-inner {
+        white-space: normal;
+    }
 </style>
 <template>
     <div class="layout" :class="{'layout-hide-text': spanLeft < 5}">
@@ -66,8 +98,54 @@
                 </div>
                 <div class="layout-content" v-bind:style="{height: `${screenHeight}px`}">
                     <Tabs type="card" v-model="activeTab" closable @on-click="selectedTab" @on-tab-remove="closeTab">
-                        <Tab-pane name="0" label="首页" :closable="false" class="layout-content-main">
-                            这是首页
+                        <Tab-pane name="0" label="首页" :closable="false" class="layout-content-main overview">
+                            <h1>服务概览</h1>
+                            <Row :gutter="16">
+                                <Col span="6">
+                                <div class="overview-box">
+                                    <div class="overview-num" v-html="service.data.length"></div>
+                                </div>
+                                <Tooltip placement="bottom-start">
+                                    服务名称
+                                    <div slot="content">
+                                        注册的所有服务
+                                    </div>
+                                </Tooltip>
+                                </Col>
+                                <Col span="6">
+                                <div class="overview-box">
+                                    <div class="overview-num" v-html="provider.data.length"></div>
+                                </div>
+                                <Tooltip content="所有注册的服务生产者">
+                                    生产者
+                                </Tooltip>
+                                </Col>
+                                <Col span="6">
+                                <div class="overview-box">
+                                    <div class="overview-num" v-html="consumer.data.length"></div>
+                                </div>
+                                <Tooltip content="所有注册的服务消费者">
+                                    消费者
+                                </Tooltip>
+                                </Col>
+                                <Col span="6">
+                                <div class="overview-box">
+                                    <div class="overview-num" v-html="address.data.length"></div>
+                                </div>
+                                <Tooltip content="所有注册的机器地址IP和端口">
+                                    机器
+                                </Tooltip>
+                                </Col>
+                            </Row>
+                            <div class="view-hr" style="margin-top: 40px;font-size: 16px"><b>服务详情</b></div>
+                            <Tabs name="service" class="no-border" style="height: 100%">
+                                <Tab-pane name="service" label="服务">
+                                    <Table :columns="service.header" :data="service.data"></Table>
+                                </Tab-pane>
+                                <Tab-pane name="provider" label="生产者">
+                                    <Table :columns="provider.header" :data="provider.data"></Table>
+                                </Tab-pane>
+                            </Tabs>
                         </Tab-pane>
                         <Tab-pane v-for="tab in tabs" :name="`${tab.id}`" :key="tab.id" :label="tab.name" :icon="tab.icon" class="layout-content-main">
                             <router-view></router-view>
@@ -83,5 +161,6 @@
 </template>
 <script>
     import view from '../script/view/index';
+    import '../css/common.css';
     export default view;
 </script>

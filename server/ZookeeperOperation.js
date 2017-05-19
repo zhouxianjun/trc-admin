@@ -80,6 +80,23 @@ const ZookeeperOperation = class ZookeeperOperation {
         await pify(this.client.mkdirp).apply(this.client, [`/${config.root}/${namespace}/${service}/${version}/configurators/${QS.stringify(address, null, null, {encodeURIComponent: (str) => {return str;}})}`, null]);
     }
 
+    async enable(namespace, service, version, address) {
+        address = {disabled: address};
+        await pify(this.client.remove).apply(this.client, [`/${config.root}/${namespace}/${service}/${version}/configurators/${QS.stringify(address, null, null, {encodeURIComponent: (str) => {return str;}})}`, -1, null]);
+    }
+
+    async getConfigurators(namespace = '*', service = '*', version = '*') {
+        let result = new Set();
+        for (let [key, value] of this.cacheUrl) {
+            if (!value || !Array.isArray(value) || !minimatch(key, `/${config.root}/${namespace}/${service}/${version}/configurators`)) continue;
+            let split = key.split('/');
+            for (let v of value) {
+                result.add(`${v}&namespace=${split[2]}&service=${split[3]}&version=${split[4]}`);
+            }
+        }
+        return result;
+    }
+
     get namespace() {
         return this.cache[0].value;
     }
@@ -119,6 +136,34 @@ const ZookeeperOperation = class ZookeeperOperation {
             let split = key.split('/');
             for (let v of value) {
                 result.add(`${v}&namespace=${split[2]}&service=${split[3]}&version=${split[4]}`);
+            }
+        }
+        return result;
+    }
+
+    get total() {
+        let result = {
+            service: new Set(),
+            provider: new Set(),
+            consumer: new Set(),
+            address: new Set()
+        };
+        for (let [key, value] of this.cacheUrl) {
+            if (!value || !Array.isArray(value) || !value.length) continue;
+            if (minimatch(key, `/${config.root}/*`)) {
+                value.forEach(v => result.service.add(v));
+            } else if (minimatch(key, `/${config.root}/*/*/*/providers`)) {
+                value.forEach(v => {
+                    result.provider.add(v);
+                    let p = QS.parse(v);
+                    result.address.add(`${p.host}:${p.port}`);
+                });
+            } else if (minimatch(key, `/${config.root}/*/*/*/consumers`)) {
+                value.forEach(v => {
+                    result.consumer.add(v);
+                    let p = QS.parse(v);
+                    result.address.add(p.host);
+                });
             }
         }
         return result;

@@ -1,0 +1,8 @@
+.no-border .ivu-tabs-bar {
+    border: none;
+}
+.view-hr {
+    width: 100%;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #e3e8ee;
+}

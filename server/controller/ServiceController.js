@@ -39,9 +39,18 @@ module.exports = class ServiceController {
     static async list(ctx) {
         let providers = ZookeeperOperation.getProviders(ctx.query.namespace, ctx.query.service, ctx.query.version);
         let consumers = ZookeeperOperation.getConsumers(ctx.query.namespace, ctx.query.service, ctx.query.version);
+        let configurators = ZookeeperOperation.getConfigurators(ctx.query.namespace, ctx.query.service, ctx.query.version);
         let ps = Utils.urlParse(providers);
         let cs = Utils.urlParse(consumers);
+        let configs = Utils.urlParse(configurators);
+        let configMap = new Map();
         let result = new Map();
+        for (let config of configs) {
+            let key = `${config.namespace}/${config.service}/${config.version}`;
+            if (!configMap.has(key)) {
+                configMap.set(key, config);
+            }
+        }
         for (let p of ps) {
             let key = `${p.namespace}/${p.service}/${p.version}`;
             if (!result.has(key)) {
@@ -54,6 +63,8 @@ module.exports = class ServiceController {
                 });
                 continue;
             }
+            let config = configMap.get(key);
+            p.disabled = config && config.disabled === `${p.host}:${p.port}`;
             result.get(key).providers.push(p);
         }
         for (let c of cs) {
