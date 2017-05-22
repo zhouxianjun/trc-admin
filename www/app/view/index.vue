@@ -138,12 +138,18 @@
                                 </Col>
                             </Row>
                             <div class="view-hr" style="margin-top: 40px;font-size: 16px"><b>服务详情</b></div>
-                            <Tabs name="service" class="no-border" style="height: 100%">
-                                <Tab-pane name="service" label="服务">
+                            <Tabs name="service" class="no-border" style="height: 100%;">
+                                <Tab-pane style="padding-right: 2px" name="service" label="服务">
                                     <Table :columns="service.header" :data="service.data"></Table>
                                 </Tab-pane>
-                                <Tab-pane name="provider" label="生产者">
+                                <Tab-pane style="padding-right: 2px" name="provider" label="生产者">
                                     <Table :columns="provider.header" :data="provider.data"></Table>
+                                </Tab-pane>
+                                <Tab-pane style="padding-right: 2px" name="consumer" label="消费者">
+                                    <Table :columns="consumer.header" :data="consumer.data"></Table>
+                                </Tab-pane>
+                                <Tab-pane style="padding-right: 2px" name="address" label="机器">
+                                    <Table :columns="address.header" :data="address.data"></Table>
                                 </Tab-pane>
                             </Tabs>
                         </Tab-pane>

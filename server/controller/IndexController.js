@@ -14,19 +14,18 @@ module.exports = class IndexController {
         }];
     }
     static async total(ctx) {
-        let totalResult = ZookeeperOperation.total;
         ctx.body = new Result(true, {
             key: 'service',
-            value: [...totalResult.service]
+            value: ZookeeperOperation.service
         }, {
             key: 'provider',
-            value: [...totalResult.provider]
+            value: ZookeeperOperation.provider
         }, {
             key: 'consumer',
-            value: [...totalResult.consumer]
+            value: ZookeeperOperation.consumer
         }, {
             key: 'address',
-            value: [...totalResult.address]
+            value: ZookeeperOperation.address
         }).json;
     }
 };

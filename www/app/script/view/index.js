@@ -5,13 +5,6 @@
 import Common from '../../script/common';
 import SelfMenu from '../../components/menu.vue';
 import $ from 'jquery';
-// 引入基本模板
-const echarts = require('echarts/lib/echarts');
-// 引入饼图组件
-require('echarts/lib/chart/pie');
-// 引入提示框和图例组件
-require('echarts/lib/component/tooltip');
-require('echarts/lib/component/legend');
 export default {
     data () {
         return {
@@ -23,7 +16,7 @@ export default {
             menus: [{
                 id: 1,
                 icon: 'ios-navigate',
-                name: '菜单一',
+                name: '服务治理',
                 sub: [{
                     id: 2,
                     icon: 'ios-navigate',
@@ -33,8 +26,8 @@ export default {
                 }, {
                     id: 3,
                     icon: 'ios-navigate',
-                    name: '菜单->2',
-                    path: '/b',
+                    name: '路由规则',
+                    path: '/router',
                     pid: 1
                 }, {
                     id: 4,
@@ -46,19 +39,47 @@ export default {
             }],
             tabs: [],
             service: {
-                header: [{title: '服务名称', key: 'name'}],
+                header: [{title: '命名空间', key: 'namespace'}, {title: '服务名', key: 'name'}],
                 data: []
             },
             provider: {
-                header: [{title: '生产者', key: 'name'}],
+                header: [{
+                    title: '命名空间', key: 'namespace'
+                }, {
+                    title: '服务名', key: 'name'
+                }, {
+                    title: '版本号', key: 'version'
+                }, {
+                    title: '机器IP', key: 'host'
+                }, {
+                    title: '机器端口', key: 'port'
+                }, {
+                    title: '权重', key: 'weight'
+                }, {
+                    title: '启动时间', key: 'start'
+                }],
                 data: []
             },
             consumer: {
-                header: [{title: '消费者', key: 'name'}],
+                header: [{
+                    title: '命名空间', key: 'namespace'
+                }, {
+                    title: '服务名', key: 'name'
+                }, {
+                    title: '版本号', key: 'version'
+                }, {
+                    title: '机器IP', key: 'host'
+                }, {
+                    title: '访问', key: 'status'
+                }, {
+                    title: '路由', key: 'router'
+                }, {
+                    title: '启动时间', key: 'start'
+                }],
                 data: []
             },
             address: {
-                header: [{title: '机器', key: 'name'}],
+                header: [{title: 'IP', key: 'value'}, {title: '所属', key: 'own'}],
                 data: []
             }
         }
@@ -135,10 +156,10 @@ export default {
             }
         },
         updateTableData(result) {
-            result.service.forEach(item => {this.service.data.push({name: item})});
-            result.provider.forEach(item => {this.provider.data.push({name: item})});
-            result.consumer.forEach(item => {this.consumer.data.push({name: item})});
-            result.address.forEach(item => {this.address.data.push({name: item})});
+            result.service.forEach(item => {this.service.data.push(item)});
+            result.provider.forEach(item => {this.provider.data.push(item)});
+            result.consumer.forEach(item => {this.consumer.data.push(item)});
+            result.address.forEach(item => {this.address.data.push(item)});
         }
     }
 }

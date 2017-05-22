@@ -15,19 +15,10 @@ const ZookeeperOperation = class ZookeeperOperation {
         this.client = zookeeper.createClient(config.zookeeper, config.zookeeperOption || {});
         this.client.connect();
         this.cacheUrl = new Map();
-        this.cache = [{
-            name: 'namespace',
-            pos: 2,
-            value: new Set()
-        }, {
-            name: 'service',
-            pos: 3,
-            value: new Set()
-        }, {
-            name: 'version',
-            pos: 4,
-            value: new Set()
-        }];
+        this.service = [];
+        this.provider = [];
+        this.consumer = [];
+        this.address = [];
         logger.info(`zookeeper connect for ${config.zookeeper}`);
 
         // listener root
@@ -55,23 +46,65 @@ const ZookeeperOperation = class ZookeeperOperation {
     }
 
     async parse() {
-        await this.clearCache();
+        this.service = [];
+        this.provider = [];
+        this.consumer = [];
+        this.address = [];
+        let uniqueService = new Set();
+        let uniqueProvider = new Set();
+        let uniqueConsumer = new Set();
+        let uniqueAddress = new Set();
         for (let [key, value] of this.cacheUrl) {
-            if (!value || !Array.isArray(value)) continue;
-            let split = key.split('/').length;
-            for (let c of this.cache) {
-                if (c.pos === split) {
-                    for (let v of value) {
-                        c.value.add(v);
+            if (!value || !Array.isArray(value) || !value.length) continue;
+            let split = key.split('/');
+            if (minimatch(key, `/${config.root}/*`)) {
+                value.forEach(v => {
+                    if (!uniqueService.has(v)) {
+                        uniqueService.add(v);
+                        this.service.push({
+                            name: v,
+                            namespace: split[2]
+                        });
                     }
-                }
+                });
+            } else if (minimatch(key, `/${config.root}/*/*/*/providers`)) {
+                value.forEach(v => {
+                    let p = QS.parse(v);
+                    p.namespace = split[2];
+                    p.name = split[3];
+                    p.version = split[4];
+                    if (!uniqueProvider.has(v)) {
+                        uniqueProvider.add(v);
+                        this.provider.push(p);
+                    }
+                    let address = `${p.host}:${p.port}`;
+                    if (!uniqueAddress.has(address)) {
+                        uniqueAddress.add(address);
+                        this.address.push({
+                            value: address,
+                            own: '生产者'
+                        });
+                    }
+                });
+            } else if (minimatch(key, `/${config.root}/*/*/*/consumers`)) {
+                value.forEach(v => {
+                    let p = QS.parse(v);
+                    p.namespace = split[2];
+                    p.name = split[3];
+                    p.version = split[4];
+                    if (!uniqueConsumer.has(v)) {
+                        uniqueConsumer.add(v);
+                        this.consumer.push(p);
+                    }
+                    if (!uniqueAddress.has(p.host)) {
+                        uniqueAddress.add(p.host);
+                        this.address.push({
+                            value: p.host,
+                            own: '消费者'
+                        });
+                    }
+                });
             }
-        }
-    }
-
-    async clearCache() {
-        for (let c of this.cache) {
-            c.value.clear();
         }
     }
 
@@ -97,10 +130,6 @@ const ZookeeperOperation = class ZookeeperOperation {
         return result;
     }
 
-    get namespace() {
-        return this.cache[0].value;
-    }
-
     getServices(namespace = '*', service = '*') {
         let result = new Set();
         for (let [key, value] of this.cacheUrl) {
@@ -111,10 +140,6 @@ const ZookeeperOperation = class ZookeeperOperation {
             }
         }
         return result;
-    }
-
-    get version() {
-        return this.cache[2].value;
     }
 
     getProviders(namespace = '*', service = '*', version = '*') {
@@ -136,34 +161,6 @@ const ZookeeperOperation = class ZookeeperOperation {
             let split = key.split('/');
             for (let v of value) {
                 result.add(`${v}&namespace=${split[2]}&service=${split[3]}&version=${split[4]}`);
-            }
-        }
-        return result;
-    }
-
-    get total() {
-        let result = {
-            service: new Set(),
-            provider: new Set(),
-            consumer: new Set(),
-            address: new Set()
-        };
-        for (let [key, value] of this.cacheUrl) {
-            if (!value || !Array.isArray(value) || !value.length) continue;
-            if (minimatch(key, `/${config.root}/*`)) {
-                value.forEach(v => result.service.add(v));
-            } else if (minimatch(key, `/${config.root}/*/*/*/providers`)) {
-                value.forEach(v => {
-                    result.provider.add(v);
-                    let p = QS.parse(v);
-                    result.address.add(`${p.host}:${p.port}`);
-                });
-            } else if (minimatch(key, `/${config.root}/*/*/*/consumers`)) {
-                value.forEach(v => {
-                    result.consumer.add(v);
-                    let p = QS.parse(v);
-                    result.address.add(p.host);
-                });
             }
         }
         return result;

@@ -6,3 +6,37 @@
     padding-bottom: 15px;
     border-bottom: 2px solid #e3e8ee;
 }
+.title em{
+    width:2px;
+    height:30px;
+    background:#23c377;
+    display:block;
+    float:left;
+}
+.title h3{
+    font:normal 16px/30px microsoft yahei;
+    color:#333;
+    margin-left:20px;
+    display:inline-block;
+}
+.title span{
+    display:inline-block;
+}
+.title{
+    border-bottom:1px dashed #e6e6e6;
+    padding-bottom:20px;
+    margin-bottom: 20px;
+}
+.title b{
+    font:normal 14px/14px microsoft yahei;
+    border-bottom:1px  solid #23c377;
+    padding-bottom:19px;
+}
+.control-label {
+    height: 32px;
+    padding-top: 5px;
+    white-space: nowrap;
+    font: normal 14px/30px microsoft yahei;
+    color: #333;
+    text-align: right;
+}
