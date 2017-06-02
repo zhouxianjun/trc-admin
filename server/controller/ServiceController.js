@@ -4,6 +4,7 @@
 'use strict';
 const ZookeeperOperation = require('../ZookeeperOperation');
 const Utils = require('../Utils');
+const Result = require('../dto/Result');
 module.exports = class ServiceController {
     static get routers() {
         return [{
@@ -81,7 +82,11 @@ module.exports = class ServiceController {
     }
 
     static async providers(ctx) {
-        ctx.body = [...ZookeeperOperation.getProviders(ctx.query.namespace, ctx.query.service, ctx.query.version)]
+        let urls = ZookeeperOperation.getProviders(ctx.query.namespace, ctx.query.service, ctx.query.version);
+        ctx.body = new Result(true, {
+            key: 'list',
+            value: Utils.urlParse(urls)
+        }).json;
     }
 
     static async consumers(ctx) {

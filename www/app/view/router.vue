@@ -1,27 +1,94 @@
 <template>
     <div>
-        <div class="title">
-            <h3>路由规则</h3>
-            <em></em>
+        <div class="box box-default">
+            <div class="box-header with-border">
+                <h3 class="box-title">查询</h3>
+
+                <div class="box-tools pull-right">
+                    <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
+                    <button type="button" class="btn btn-box-tool" data-bind="click: doQuery"><i class="glyphicon glyphicon-search"></i></button>
+                </div>
+            </div>
+            <div class="box-body">
+                <div class="row">
+                    <div class="col-sm-6">
+                        <label>名称</label>
+                        <div class="form-group">
+                            <input type="text" class="form-control pull-right">
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <label>服务</label>
+                        <div class="form-group">
+                            <input type="text" class="form-control pull-right">
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-6">
+                        <label>版本</label>
+                        <div class="form-group">
+                            <input type="text" class="form-control pull-right">
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <label>机器</label>
+                        <div class="form-group">
+                            <input type="text" class="form-control pull-right">
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <Row style="padding-left: 20px">
-            <Col :sm="1">
-                <label class="control-label">名称:</label>
-            </Col>
-            <Col :xs="{ span: 3, offset: 0 }" :lg="{ span: 4, offset: 0 }">
-            <Input v-model="search.name" placeholder="根据路由名称查询"></Input>
-            </Col>
-            <Col :xs="{ span: 1, offset: 2 }" :lg="{ span: 1, offset: 3 }">
-            <label class="control-label">服务:</label>
-            </Col>
-            <Col :xs="{ span: 3, offset: 0 }" :lg="{ span: 4, offset: 0 }">
-            <Input v-model="search.service" placeholder="根据服务名称查询"></Input>
-            </Col>
-        </Row>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <span>路由规则列表</span>
+                <button type="button" class="btn btn-default btn-sm pull-right" data-toggle="modal" data-target="#add-router">
+                    <span class="glyphicon glyphicon glyphicon-plus" aria-hidden="true"></span> 添加
+                </button>
+            </div>
+            <div class="panel-body">
+                <simple-table :columns="table.columns" :data="table.data"></simple-table>
+            </div>
+        </div>
+        <modal id="add-router" title="新增路由" @on-ok="saveRouter">
+            <Form :ref="router" :model="router" :label-width="80" :rules="routerValidate">
+                <Form-item label="名称" prop="name">
+                    <Input v-model="router.name" placeholder="请输入路由名称"/>
+                </Form-item>
+                <Form-item label="服务" prop="service">
+                    <Select @on-change="changeService" v-model="router.service" placeholder="请选择服务">
+                        <Option v-for="item in providers" :value="`${item.namespace}.${item.version}.${item.service}`" :key="item" v-html="`${item.namespace}.${item.version}.${item.service}`"></Option>
+                    </Select>
+                </Form-item>
+                <Form-item label="方法" prop="method">
+                    <Select v-model="router.method" multiple>
+                        <Option v-for="item in methods" :value="item" :key="item" v-html="item"></Option>
+                    </Select>
+                </Form-item>
+                <Form-item label="消费者" prop="consumeHost">
+                    <i-tags-input :tags="router.consumeHost" @tags-change="changeConsumeHost" :klass="{
+                        container: 'tags-input ivu-input',
+                        input: 'input',
+                        placeholder: 'placeholder',
+                        gap: 'gap',
+                        tag: 'tag'
+                    }"></i-tags-input>
+                </Form-item>
+                <Form-item label="提供者" prop="providerAddress">
+                    <i-tags-input :tags="router.providerAddress" @tags-change="changeConsumeHost" :klass="{
+                        container: 'tags-input ivu-input',
+                        input: 'input',
+                        placeholder: 'placeholder',
+                        gap: 'gap',
+                        tag: 'tag'
+                    }"></i-tags-input>
+                </Form-item>
+            </Form>
+        </modal>
     </div>
 </template>
 <script>
     import view from '../script/view/router';
-    import '../css/common.css';
     export default view;
 </script>

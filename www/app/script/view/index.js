@@ -4,15 +4,93 @@
 'use strict';
 import Common from '../../script/common';
 import SelfMenu from '../../components/menu.vue';
-import $ from 'jquery';
+import SimpleTable from '../../components/simple-table.vue';
+/*';
+import merge from 'merge';
+import 'admin-lte/plugins/datatables/dataTables.bootstrap.css';
+import 'admin-lte/plugins/datatables/extensions/TableTools/css/dataTables.tableTools.min.css';
+import 'admin-lte/plugins/datatables/dataTables.bootstrap.min';
+import 'admin-lte/plugins/datatables/extensions/TableTools/js/dataTables.tableTools.min';*/
+const user2x160 = require('admin-lte/dist/img/user2-160x160.jpg');
 export default {
     data () {
         return {
-            spanLeft: 5,
-            spanRight: 19,
-            screenHeight: autoHeight(),
-            activeTab: 0,
-            activeMenu: 0,
+            active: 0,
+            img: {
+                user2x160: user2x160
+            },
+            tables: {
+                service: {
+                    columns: [{
+                        header: '命名空间',
+                        name: 'namespace'
+                    }, {
+                        header: '服务名',
+                        name: 'name'
+                    }],
+                    data: []
+                },
+                provider: {
+                    columns: [{
+                        header: '命名空间',
+                        name: 'namespace'
+                    }, {
+                        header: '服务名',
+                        name: 'name'
+                    }, {
+                        header: '版本号',
+                        name: 'version'
+                    }, {
+                        header: '机器IP',
+                        name: 'host'
+                    }, {
+                        header: '机器端口',
+                        name: 'port'
+                    }, {
+                        header: '权重',
+                        name: 'weight'
+                    }, {
+                        header: '启动时间',
+                        name: 'start'
+                    }],
+                    data: []
+                },
+                consumer: {
+                    columns: [{
+                        header: '命名空间',
+                        name: 'namespace'
+                    }, {
+                        header: '服务名',
+                        name: 'name'
+                    }, {
+                        header: '版本号',
+                        name: 'version'
+                    }, {
+                        header: '机器IP',
+                        name: 'host'
+                    }, {
+                        header: '访问',
+                        name: 'status'
+                    }, {
+                        header: '路由',
+                        name: 'router'
+                    }, {
+                        header: '启动时间',
+                        name: 'start'
+                    }],
+                    data: []
+                },
+                address: {
+                    columns: [{
+                        header: '地址',
+                        name: 'value'
+                    }, {
+                        header: '所属',
+                        name: 'own'
+                    }],
+                    data: []
+                }
+            },
             menus: [{
                 id: 1,
                 icon: 'ios-navigate',
@@ -33,93 +111,43 @@ export default {
                     id: 4,
                     icon: 'ios-navigate',
                     name: '菜单->4',
-                    path: '/c',
-                    pid: 1
+                    pid: 1,
+                    sub: [{
+                        id: 5,
+                        name: 'test',
+                        path: '/a'
+                    }]
+                }]
+            }, {
+                id: 6,
+                name: 'test2',
+                sub: [{
+                    id: 7,
+                    name: 'test22'
                 }]
             }],
-            tabs: [],
-            service: {
-                header: [{title: '命名空间', key: 'namespace'}, {title: '服务名', key: 'name'}],
-                data: []
-            },
-            provider: {
-                header: [{
-                    title: '命名空间', key: 'namespace'
-                }, {
-                    title: '服务名', key: 'name'
-                }, {
-                    title: '版本号', key: 'version'
-                }, {
-                    title: '机器IP', key: 'host'
-                }, {
-                    title: '机器端口', key: 'port'
-                }, {
-                    title: '权重', key: 'weight'
-                }, {
-                    title: '启动时间', key: 'start'
-                }],
-                data: []
-            },
-            consumer: {
-                header: [{
-                    title: '命名空间', key: 'namespace'
-                }, {
-                    title: '服务名', key: 'name'
-                }, {
-                    title: '版本号', key: 'version'
-                }, {
-                    title: '机器IP', key: 'host'
-                }, {
-                    title: '访问', key: 'status'
-                }, {
-                    title: '路由', key: 'router'
-                }, {
-                    title: '启动时间', key: 'start'
-                }],
-                data: []
-            },
-            address: {
-                header: [{title: 'IP', key: 'value'}, {title: '所属', key: 'own'}],
-                data: []
-            }
+            tabs: []
         }
     },
     async mounted() {
-        window.onresize = () => {
-            return (() => {
-                this.screenHeight = autoHeight();
-                this.tableWidth = this.calcTableWidth();
-                this.pie.resize();
-            })()
-        };
         // 初始化数据
         let result = await this.fetch('/index/total');
         this.updateTableData(result);
     },
     components: {
-        SelfMenu
+        SelfMenu,
+        SimpleTable
     },
     watch:{
 
     },
     computed: {
-        iconSize () {
-            return this.spanLeft === 5 ? 14 : 24;
-        }
+
     },
     methods: {
-        toggleClick () {
-            if (this.spanLeft === 5) {
-                this.spanLeft = 2;
-                this.spanRight = 22;
-            } else {
-                this.spanLeft = 5;
-                this.spanRight = 19;
-            }
-        },
         selectedTab(selected) {
-            this.activeMenu = parseInt(selected);
-            this.selectedMenu(this.activeMenu);
+            this.selectedMenu(selected);
+            this.active = selected;
         },
         closeTab(name) {
             let index = this.tabs.findIndex(tab => {
@@ -129,13 +157,13 @@ export default {
             });
             if (index > -1) {
                 this.tabs.splice(index);
-                this.selectedTab(this.activeTab);
+                this.selectedTab(this.tabs[this.tabs.length - 1].id);
             }
         },
         selectedMenu(selected) {
             if (selected === 0) return;
             let menu = this.findMenu(this.menus, selected);
-            let matched = this.$router.getMatchedComponents(menu.path);
+            let matched = menu.path ? this.$router.getMatchedComponents(menu.path): [];
             if (!matched.length) {
                 alert('未实现');
                 return;
@@ -143,8 +171,11 @@ export default {
             if (!this.tabs.includes(menu)) {
                 this.tabs.push(menu);
             }
-            this.$router.push(menu.path);
-            this.activeTab = `${menu.id}`;
+            setTimeout(() => {
+                $(`a[href="#tab-${menu.id}"]`).tab('show');
+                this.$router.push(menu.path);
+            }, 20);
+            this.active = selected;
         },
         findMenu(menus, id) {
             for (let menu of menus) {
@@ -155,15 +186,41 @@ export default {
                 }
             }
         },
+        initDataTables() {
+            /*Common.tableToolsButton();
+            // 初始化服务表格
+            $('#service-table').DataTable(merge(Common.dataTableSettings, {
+                dom: 'T<"clear">lfrtip',
+                paging: false,
+                serverSide: false,
+                ajax: function (data, callback, settings) {
+
+                },
+                columns: [{
+                    data: 'date',
+                    render: function(date) {
+                        //return moment(date).format('YYYY-MM-DD');
+                    }
+                }, {
+                    data: 'installed'
+                }, {
+                    data: 'mobile_active'
+                }, {
+                    data: 'app_active'
+                }]
+            }));
+            // 初始化生产者表格
+            $('#provider-table').DataTable();
+            // 初始化消费者表格
+            $('#consumer-table').DataTable();
+            // 初始化机器表格
+            $('#address-table').DataTable();*/
+        },
         updateTableData(result) {
-            result.service.forEach(item => {this.service.data.push(item)});
-            result.provider.forEach(item => {this.provider.data.push(item)});
-            result.consumer.forEach(item => {this.consumer.data.push(item)});
-            result.address.forEach(item => {this.address.data.push(item)});
+            this.tables.service.data = result.service;
+            this.tables.provider.data = result.provider;
+            this.tables.consumer.data = result.consumer;
+            this.tables.address.data = result.address;
         }
     }
-}
-
-function autoHeight() {
-    return Common.getWindowHeight() - 65 - 65;
 }

@@ -1,23 +1,73 @@
 <template>
-    <Submenu :name="menu.id" v-if="menu.sub && menu.sub.length" v-show="!(spanLeft < 5 && menu.pid)">
-        <template slot="title">
-            <Icon :type="menu.icon" :size="iconSize"></Icon>
-            <span v-show="spanLeft >= 5" v-text="menu.name"></span>
-        </template>
-        <self-menu :iconSize="iconSize" :spanLeft="spanLeft" :menu="menu" v-for="menu in menu.sub" :key="menu.id"></self-menu>
-    </Submenu>
-    <Menu-item :name="menu.id" v-else v-show="!(spanLeft < 5 && menu.pid)">
-        <Icon :type="menu.icon" :size="iconSize"></Icon>
-        <span v-show="spanLeft >= 5" v-text="menu.name"></span>
-    </Menu-item>
+    <ul class="sidebar-menu" data-widget="true">
+        <li class="header">MAIN NAVIGATION</li>
+        <self-menu-item :menu="menu" v-for="menu in menus" :key="menu.id" @on-selected="handClick"></self-menu-item>
+    </ul>
 </template>
 <script>
+    import SelfMenuItem from './menu-item.vue';
     export default {
         name: 'self-menu',
+        data() {
+            return {
+                active: this.value
+            }
+        },
         props: {
-            menu: Object,
-            iconSize: Number,
-            spanLeft: Number
+            menus: Array,
+            value: [String, Number]
+        },
+        methods: {
+            handClick(id) {
+                this.active = id;
+                this.$emit('on-selected', id);
+            },
+            openMenu(el) {
+                return new Promise(resolve => {
+                    let parent = el.prev().parents('ul').first();
+                    let ul = parent.find('ul:visible').slideUp(500);
+                    ul.removeClass('menu-open');
+                    let parent_li = el.prev().parent("li");
+
+                    el.slideDown(500, () => {
+                        el.addClass('menu-open');
+                        parent.find('li.active').removeClass('active');
+                        parent_li.addClass('active');
+                        resolve();
+                    });
+                });
+            },
+            activeMenu(id) {
+                let a = $(`#menu-${id}`);
+                let parents = a.parents('ul.treeview-menu');
+
+                if (!parents.first().is(':visible')) {
+                    (async () => {
+                        for (let i = parents.length; i > 0; i--) {
+                            let p = $(parents.get(i - 1));
+                            if (!p.is(':visible')) {
+                                await this.openMenu(p);
+                            }
+                        }
+                        a.parent('li').addClass('active');
+                    })();
+                    return;
+                }
+                parents.find('li.active').removeClass('active');
+                a.parent('li').addClass('active');
+                a.parents('li.treeview').addClass('active');
+            }
+        },
+        watch: {
+            value(val) {
+                this.active = val;
+            },
+            active(val) {
+                this.activeMenu(val);
+            }
+        },
+        components: {
+            SelfMenuItem
         }
     }
 </script>

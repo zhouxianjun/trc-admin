@@ -48,8 +48,14 @@ module.exports = {
                 fallback: 'style-loader'
             })
         }, {
-            test: /\.(gif|jpg|png|woff|svg|eot|ttf)\??.*$/,
-            loader: 'url-loader?limit=1024'
+            test: /\.(woff|eot|ttf)\??.*$/,
+            loader: 'url-loader?limit=1024&name=fonts/[hash].[ext]'
+        }, {
+            test: /\.(gif|jpg|png|svg)\??.*$/,
+            loader: 'url-loader?limit=1024&name=img/[hash].[ext]'
+        }, {
+            test: /\.(swf)$/,
+            loader: 'file-loader?name=swf/[hash].[ext]'
         }, {
             test: /\.(html|tpl)$/,
             loader: 'html-loader'
@@ -57,7 +63,8 @@ module.exports = {
     },
     resolve: {
         alias: {
-            'vue$': 'vue/dist/vue.esm.js'
+            'vue$': 'vue/dist/vue.esm.js',
+            'datatables': 'admin-lte/plugins/datatables/jquery.dataTables.min'
         }
     },
     plugins: [
@@ -69,6 +76,7 @@ module.exports = {
             filename: '../public/index.html',
             template: './index.ejs',
             inject: false
-        })
+        }),
+        new webpack.ProvidePlugin({$: "jquery", jQuery: 'jquery', DataTable: 'datatables'})
     ]
 };
