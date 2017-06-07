@@ -1,7 +1,7 @@
 <template>
     <div class="wrapper">
         <header class="main-header">
-            <a href="#" class="logo navbar-fixed-top">
+            <a href="#" class="logo">
                 <!-- mini logo for sidebar mini 50x50 pixels -->
                 <span class="logo-mini">TRC</span>
                 <!-- logo for regular state and mobile devices -->
@@ -9,7 +9,7 @@
             </a>
 
             <!-- Header Navbar: style can be found in header.less -->
-            <nav class="navbar navbar-fixed-top" role="navigation">
+            <nav class="navbar navbar-static-top" role="navigation">
                 <!-- Sidebar toggle button-->
                 <a href="#" class="sidebar-toggle" data-toggle="offcanvas" role="button">
                     <span class="sr-only">Toggle navigation</span>
@@ -228,7 +228,7 @@
                         <li class="dropdown user user-menu">
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                                 <img :src="img.user2x160" class="user-image" alt="User Image">
-                                <span class="hidden-xs" data-bind="text: user.name"></span>
+                                <span class="hidden-xs">Alone</span>
                             </a>
                             <ul class="dropdown-menu">
                                 <!-- User image -->
@@ -236,18 +236,18 @@
                                     <img :src="img.user2x160" class="img-circle" alt="User Image">
 
                                     <p>
-                                        <span id="real_name_text" data-bind="text: user.real_name"></span>
-                                        <small data-bind="text: user.role_name"></small>
+                                        <span id="real_name_text">Alone</span>
+                                        <small>系统管理员</small>
                                     </p>
                                 </li>
                                 <!-- Menu Body -->
                                 <!-- Menu Footer-->
                                 <li class="user-footer">
                                     <div class="pull-left">
-                                        <a href="#" class="btn btn-default btn-flat" data-bind="click: openUserForm">资料</a>
+                                        <a href="#" class="btn btn-default btn-flat">资料</a>
                                     </div>
                                     <div class="pull-right">
-                                        <a href="#" data-bind="click: logout" class="btn btn-default btn-flat">退出</a>
+                                        <a href="#" class="btn btn-default btn-flat">退出</a>
                                     </div>
                                 </li>
                             </ul>
@@ -271,7 +271,7 @@
                         <img :src="img.user2x160" class="img-circle" alt="User Image">
                     </div>
                     <div class="pull-left info">
-                        <p data-bind="text: user.name"></p>
+                        <p>Admin</p>
                         <a href="#"><i class="fa fa-circle text-success"></i> Online</a>
                     </div>
                 </div>
@@ -287,7 +287,7 @@
                 </form>
                 <!-- /.search form -->
                 <!-- sidebar menu: : style can be found in sidebar.less -->
-                <self-menu :menus="menus" v-model="active" @on-selected="selectedMenu"></self-menu>
+                <self-menu ref="menus" :menus="menus" v-model="active" @on-selected="selectedMenu"></self-menu>
             </section>
             <!-- /.sidebar -->
         </aside>
@@ -297,13 +297,13 @@
             <!-- Content Header (Page header) -->
             <section class="content-header">
                 <h1>
-                    Dashboard
-                    <small>Version 2.0</small>
+                    Thrift Register Center
+                    <small>Version 1.0</small>
                 </h1>
-                <ol class="breadcrumb">
+                <!--<ol class="breadcrumb">
                     <li><a href="#"><i class="fa fa-dashboard"></i> Home</a></li>
                     <li class="active">Dashboard</li>
-                </ol>
+                </ol>-->
             </section>
 
             <!-- Main content -->
@@ -313,18 +313,12 @@
                         <section>
                             <header>
                                 <ul class="nav nav-tabs">
-                                    <li class="active">
-                                        <a href="#home" data-toggle="tab">
-                                            <i class="fa fa-home"></i>
-                                            &nbsp;&nbsp;我的主页&nbsp;&nbsp;
-                                            <i class="fa fa-lock"></i>
-                                        </a>
-                                    </li>
-                                    <li v-for="tab in tabs" :key="tab.id">
-                                        <a v-bind:href="`#tab-${tab.id}`" data-toggle="tab" @click="selectedTab(tab.id)">
+                                    <li v-for="tab in tabs" :key="tab.id" :class="{active: $route.path == tab.path}">
+                                        <a href="javascript:void(0);" @click="selectedMenu(tab.id)">
                                             <i v-bind:css="`fa ${tab.icon}`"></i>
                                             &nbsp;&nbsp;<span v-html="tab.name"></span>&nbsp;&nbsp;
-                                            <i class="fa fa-times" style="cursor: pointer" @click.self.stop.prevent="closeTab(tab.id)"></i>
+                                            <i class="fa fa-times" v-if="tab.closeable === undefined || tab.closeable === true" style="cursor: pointer" @click.self.stop.prevent="closeTab(tab.id)"></i>
+                                            <i class="fa fa-lock" v-else></i>
                                         </a>
                                     </li>
                                 </ul>
@@ -334,96 +328,11 @@
                 </div>
 
                 <div id="myTabContent" class="tab-content" style="padding: 10px 0 0 0;">
-                    <div class="tab-pane fade in active" id="home">
-                        <div class="slimScroll">
-                            <div class="row">
-                                <div class="col-md-3 col-sm-6 col-xs-12">
-                                    <div class="info-box">
-                                        <span class="info-box-icon bg-aqua"><i class="ion ion-ios-gear-outline"></i></span>
-
-                                        <div class="info-box-content">
-                                            <span class="info-box-text">所有服务</span>
-                                            <span class="info-box-number" v-html="tables.service.data.length"></span>
-                                        </div>
-                                        <!-- /.info-box-content -->
-                                    </div>
-                                    <!-- /.info-box -->
-                                </div>
-                                <!-- /.col -->
-                                <div class="col-md-3 col-sm-6 col-xs-12">
-                                    <div class="info-box">
-                                        <span class="info-box-icon bg-red"><i class="fa fa-google-plus"></i></span>
-
-                                        <div class="info-box-content">
-                                            <span class="info-box-text">生产者</span>
-                                            <span class="info-box-number" v-html="tables.provider.data.length"></span>
-                                        </div>
-                                        <!-- /.info-box-content -->
-                                    </div>
-                                    <!-- /.info-box -->
-                                </div>
-                                <!-- /.col -->
-
-                                <!-- fix for small devices only -->
-                                <div class="clearfix visible-sm-block"></div>
-
-                                <div class="col-md-3 col-sm-6 col-xs-12">
-                                    <div class="info-box">
-                                        <span class="info-box-icon bg-green"><i class="ion ion-ios-cart-outline"></i></span>
-
-                                        <div class="info-box-content">
-                                            <span class="info-box-text">消费者</span>
-                                            <span class="info-box-number" v-html="tables.consumer.data.length"></span>
-                                        </div>
-                                        <!-- /.info-box-content -->
-                                    </div>
-                                    <!-- /.info-box -->
-                                </div>
-                                <!-- /.col -->
-                                <div class="col-md-3 col-sm-6 col-xs-12">
-                                    <div class="info-box">
-                                        <span class="info-box-icon bg-yellow"><i class="ion ion-ios-people-outline"></i></span>
-
-                                        <div class="info-box-content">
-                                            <span class="info-box-text">机器</span>
-                                            <span class="info-box-number" v-html="tables.address.data.length"></span>
-                                        </div>
-                                        <!-- /.info-box-content -->
-                                    </div>
-                                    <!-- /.info-box -->
-                                </div>
-                                <!-- /.col -->
-                            </div>
-                            <!-- /.row -->
-                            <div class="view-hr" style="margin-top: 40px;font-size: 16px"><b>服务详情</b></div>
-                            <div class="nav-tabs-custom">
-                                <!-- Tabs within a box -->
-                                <ul class="nav nav-tabs">
-                                    <li class="active"><a href="#service-tab" data-toggle="tab">服务</a></li>
-                                    <li><a href="#provider-tab" data-toggle="tab">生产者</a></li>
-                                    <li><a href="#consumer-tab" data-toggle="tab">消费者</a></li>
-                                    <li><a href="#address-tab" data-toggle="tab">机器</a></li>
-                                </ul>
-                                <div class="tab-content no-padding">
-                                    <div class="chart tab-pane active" id="service-tab" style="position: relative;">
-                                        <simple-table :columns="tables.service.columns" :data="tables.service.data"></simple-table>
-                                    </div>
-                                    <div class="chart tab-pane" id="provider-tab" style="position: relative;">
-                                        <simple-table :columns="tables.provider.columns" :data="tables.provider.data"></simple-table>
-                                    </div>
-                                    <div class="chart tab-pane" id="consumer-tab" style="position: relative;">
-                                        <simple-table :columns="tables.consumer.columns" :data="tables.consumer.data"></simple-table>
-                                    </div>
-                                    <div class="chart tab-pane" id="address-tab" style="position: relative;">
-                                        <simple-table :columns="tables.address.columns" :data="tables.address.data"></simple-table>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div v-for="tab in tabs" class="tab-pane" :key="tab.id" :id="`tab-${tab.id}`">
-                        <router-view></router-view>
-                    </div>
+                    <transition name="fade" mode="out-in" appear>
+                        <keep-alive>
+                            <router-view></router-view>
+                        </keep-alive>
+                    </transition>
                 </div>
             </section>
             <!-- /.content -->

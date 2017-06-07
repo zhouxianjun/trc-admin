@@ -3,17 +3,9 @@
  */
 'use strict';
 import SimpleTable from "../../components/simple-table.vue";
-import Modal from "../../components/modal.vue";
-import Input from "iview/src/components/input";
-import Form from "iview/src/components/form";
-import {Option, OptionGroup, Select} from "iview/src/components/select";
-import tagsInput from 'vue-tagsinput';
-import iTagsInput from '../../components/iview-tags-input.vue';
-import "../../plugins/bootstrapvalidator/css/bootstrapValidator.min.css";
-import "../../plugins/bootstrapvalidator/js/bootstrapValidator.min";
-import "../../plugins/bootstrapvalidator/js/language/zh_CN";
-const FormItem = Form.Item;
-import Common from '../common';
+import iTagsInput from "../../components/iview-tags-input.vue";
+import iTable from '../../components/i-table.vue';
+import Common from "../common";
 export default {
     data() {
         return {
@@ -23,22 +15,24 @@ export default {
                 version: '',
                 address: ''
             },
+            tableWidth: 0,
+            addRouterModel: false,
             table: {
                 columns: [{
-                    header: '名称',
-                    name: 'name'
+                    title: '名称',
+                    key: 'name'
                 }, {
-                    header: '命名空间',
-                    name: 'namespace'
+                    title: '命名空间',
+                    key: 'namespace'
                 }, {
-                    header: '服务名',
-                    name: 'service'
+                    title: '服务名',
+                    key: 'service'
                 }, {
-                    header: '版本号',
-                    name: 'version'
+                    title: '版本号',
+                    key: 'version'
                 }, {
-                    header: '匹配规则',
-                    name: 'value'
+                    title: '匹配规则',
+                    key: 'value'
                 }],
                 data: []
             },
@@ -74,20 +68,21 @@ export default {
     },
     components: {
         SimpleTable,
-        Modal,
-        Select,
-        Option,
-        OptionGroup,
-        Form,
-        FormItem,
-        Input,
-        tagsInput,
-        iTagsInput
+        iTagsInput,
+        iTable
     },
     methods: {
         saveRouter(close) {
-            let validate = $('#addRouterForm').bootstrapValidator('validate');
-            $('#addRouterForm').data('bootstrapValidator').isValid() && close();
+            this.$refs['router'].validate((valid) => {
+                if (valid) {
+                    this.$Message.success({
+                        content: '提交成功!',
+                        duration: 0
+                    });
+                } else {
+                    this.$Message.error('表单验证失败!');
+                }
+            })
         },
         changeService(val) {
             let methods = new Set();
@@ -101,10 +96,16 @@ export default {
             this.methods = [...methods];
         },
         changeConsumeHost(index, value) {
+            this.changeTags(this.router.consumeHost, index, value);
+        },
+        changeProviderAddress(index, value) {
+            this.changeTags(this.router.providerAddress, index, value);
+        },
+        changeTags(prop, index, value) {
             if (value) {
-                this.router.consumeHost.splice(index, 0, value);
+                prop.splice(index, 0, value);
             } else {
-                this.router.consumeHost.splice(index, 1);
+                prop.splice(index, 1);
             }
         }
     }

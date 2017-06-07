@@ -1,7 +1,7 @@
 <template>
     <ul class="sidebar-menu" data-widget="true">
         <li class="header">MAIN NAVIGATION</li>
-        <self-menu-item :menu="menu" v-for="menu in menus" :key="menu.id" @on-selected="handClick"></self-menu-item>
+        <self-menu-item :menu="menu" v-for="menu in menus" :key="menu.id"@on-collapsed="handCollapsed" @on-expanded="handExpanded" @on-selected="handClick"></self-menu-item>
     </ul>
 </template>
 <script>
@@ -17,10 +17,20 @@
             menus: Array,
             value: [String, Number]
         },
+        mounted() {
+
+        },
         methods: {
             handClick(id) {
                 this.active = id;
                 this.$emit('on-selected', id);
+            },
+            handCollapsed(id) {
+                this.$emit('on-collapsed', id);
+            },
+            handExpanded(id) {
+                this.$emit('on-expanded', id);
+                this.activeMenu(this.active);
             },
             openMenu(el) {
                 return new Promise(resolve => {
@@ -39,6 +49,10 @@
             },
             activeMenu(id) {
                 let a = $(`#menu-${id}`);
+                if (!a.length) {
+                    $(this.$el).find('li.active').not('.treeview').removeClass('active');
+                    return;
+                }
                 let parents = a.parents('ul.treeview-menu');
 
                 if (!parents.first().is(':visible')) {

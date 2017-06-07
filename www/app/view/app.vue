@@ -9,6 +9,7 @@
             return {}
         },
         mounted () {
+            this.$router.mode === 'abstract' && this.$router.push('/');
         },
         beforeDestroy () {
         },

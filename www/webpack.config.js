@@ -49,13 +49,13 @@ module.exports = {
             })
         }, {
             test: /\.(woff|eot|ttf)\??.*$/,
-            loader: 'url-loader?limit=1024&name=fonts/[hash].[ext]'
+            loader: 'url-loader?limit=1024&name=fonts/[name]-[sha512:hash:base64:7].[ext]'
         }, {
             test: /\.(gif|jpg|png|svg)\??.*$/,
-            loader: 'url-loader?limit=1024&name=img/[hash].[ext]'
+            loader: 'url-loader?limit=1024&name=img/[name]-[sha512:hash:base64:7].[ext]'
         }, {
             test: /\.(swf)$/,
-            loader: 'file-loader?name=swf/[hash].[ext]'
+            loader: 'file-loader?name=swf/[name]-[sha512:hash:base64:7].[ext]'
         }, {
             test: /\.(html|tpl)$/,
             loader: 'html-loader'

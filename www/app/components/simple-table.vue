@@ -2,7 +2,7 @@
     <table class="table table-striped table-hover">
         <thead>
         <tr>
-            <th v-for="column in columns" :key="column.header" v-html="column.header"></th>
+            <th v-for="column in columns" :key="column" v-html="column.title"></th>
         </tr>
         </thead>
         <tbody>
@@ -41,7 +41,7 @@
                 for (let val of value) {
                     let tmp = [];
                     for (let column of this.columns) {
-                        let v = this.resolveValue(val, column.name);
+                        let v = this.resolveValue(val, column.key);
                         if (column.renderer && typeof column.renderer === 'function') {
                             v = column.renderer(v, val);
                         }

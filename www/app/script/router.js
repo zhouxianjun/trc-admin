@@ -2,14 +2,14 @@
  * Created by alone on 17-5-11.
  */
 import Index from '../view/index.vue';
-import TabA from '../view/a.vue';
+import Home from '../view/home.vue';
 import Router from '../view/router.vue';
 export default [{
     path: '/',
     component: Index,
     children: [{
-        path: 'a',
-        component: TabA
+        path: 'home',
+        component: Home
     }, {
         path: 'router',
         component: Router

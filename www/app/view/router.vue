@@ -40,19 +40,19 @@
                 </div>
             </div>
         </div>
-        <div class="panel panel-default">
+        <div class="panel panel-default i-panel-default">
             <div class="panel-heading">
                 <span>路由规则列表</span>
-                <button type="button" class="btn btn-default btn-sm pull-right" data-toggle="modal" data-target="#add-router">
+                <button type="button" class="btn btn-default btn-sm pull-right" @click="addRouterModel = true">
                     <span class="glyphicon glyphicon glyphicon-plus" aria-hidden="true"></span> 添加
                 </button>
             </div>
             <div class="panel-body">
-                <simple-table :columns="table.columns" :data="table.data"></simple-table>
+                <i-table :columns="table.columns" :data="table.data" :headerColor="`#fff`"></i-table>
             </div>
         </div>
-        <modal id="add-router" title="新增路由" @on-ok="saveRouter">
-            <Form :ref="router" :model="router" :label-width="80" :rules="routerValidate">
+        <Modal v-model="addRouterModel" title="新增路由" @on-ok="saveRouter">
+            <Form ref="router" :model="router" :label-width="80" :rules="routerValidate">
                 <Form-item label="名称" prop="name">
                     <Input v-model="router.name" placeholder="请输入路由名称"/>
                 </Form-item>
@@ -76,7 +76,7 @@
                     }"></i-tags-input>
                 </Form-item>
                 <Form-item label="提供者" prop="providerAddress">
-                    <i-tags-input :tags="router.providerAddress" @tags-change="changeConsumeHost" :klass="{
+                    <i-tags-input :tags="router.providerAddress" @tags-change="changeProviderAddress" :klass="{
                         container: 'tags-input ivu-input',
                         input: 'input',
                         placeholder: 'placeholder',
@@ -85,7 +85,7 @@
                     }"></i-tags-input>
                 </Form-item>
             </Form>
-        </modal>
+        </Modal>
     </div>
 </template>
 <script>
