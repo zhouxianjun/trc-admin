@@ -4,8 +4,10 @@
 'use strict';
 import SimpleTable from "../../components/simple-table.vue";
 import iTagsInput from "../../components/iview-tags-input.vue";
-import iTable from '../../components/i-table.vue';
+import Table from '../../components/i-table.vue';
+import routerDetail from '../../components/router-detail.vue';
 import Common from "../common";
+import merge from 'merge';
 export default {
     data() {
         return {
@@ -17,8 +19,21 @@ export default {
             },
             tableWidth: 0,
             addRouterModel: false,
+            removeRouterModal: false,
+            removeRouterName: '',
+            removeRouterItem: null,
             table: {
                 columns: [{
+                    type: 'expand',
+                    width: 50,
+                    render: (h, params) => {
+                        return h(routerDetail, {
+                            props: {
+                                detail: params.row
+                            }
+                        })
+                    }
+                }, {
                     title: '名称',
                     key: 'name'
                 }, {
@@ -31,8 +46,27 @@ export default {
                     title: '版本号',
                     key: 'version'
                 }, {
-                    title: '匹配规则',
-                    key: 'value'
+                    title: '操作',
+                    key: 'action',
+                    width: 150,
+                    align: 'center',
+                    render: (h, params) => {
+                        return h('div', [
+                            h('Button', {
+                                props: {
+                                    type: 'error',
+                                    size: 'small'
+                                },
+                                on: {
+                                    click: () => {
+                                        this.removeRouterItem = params.row;
+                                        this.removeRouterName = params.row.name;
+                                        this.removeRouterModal = true;
+                                    }
+                                }
+                            }, '删除')
+                        ]);
+                    }
                 }],
                 data: []
             },
@@ -65,29 +99,54 @@ export default {
                 return has;
             });
         }
+
+        await this.doQuery();
     },
     components: {
         SimpleTable,
         iTagsInput,
-        iTable
+        Table,
+        routerDetail
     },
     methods: {
-        saveRouter(close) {
-            this.$refs['router'].validate((valid) => {
+        async removeRouter() {
+            if (!this.removeRouterItem) return;
+            let params = {
+                namespace: this.removeRouterItem.namespace,
+                version: this.removeRouterItem.version
+            };
+            delete this.removeRouterItem.namespace;
+            delete this.removeRouterItem.version;
+            delete this.removeRouterItem._index;
+            await this.fetch('/router/remove', {method: 'post', data: this.removeRouterItem, params: params});
+            this.removeRouterItem = null;
+            this.removeRouterModal = false;
+            setTimeout(() => this.doQuery(), 500);
+        },
+        saveRouter() {
+            this.$refs['router'].validate(async (valid) => {
                 if (valid) {
-                    this.$Message.success({
-                        content: '提交成功!',
-                        duration: 0
-                    });
+                    let body = merge.clone(this.router);
+                    let split = body.service.split('/');
+                    body.service = split[2];
+                    await this.fetch('/router/add', {method: 'post', data: body, params: {
+                        namespace: split[0],
+                        version: split[1]
+                    }});
+                    setTimeout(() => this.doQuery(), 500);
                 } else {
                     this.$Message.error('表单验证失败!');
                 }
             })
         },
+        async doQuery() {
+            let routers = await this.fetch('/router/list', {params: this.search});
+            routers && (this.table.data = routers.list || []);
+        },
         changeService(val) {
             let methods = new Set();
             for (let item of this.providers) {
-                if (`${item.namespace}.${item.version}.${item.service}` === val) {
+                if (`${item.namespace}/${item.version}/${item.service}` === val) {
                     for (let m of item.methods.split(',')) {
                         methods.add(m);
                     }

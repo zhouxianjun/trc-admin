@@ -9,27 +9,7 @@ module.exports = class ServiceController {
     static get routers() {
         return [{
             method: 'get',
-            path: '/service/list',
-            value: ServiceController.list
-        }, {
-            method: 'get',
-            path: '/service/namespace/list',
-            value: ServiceController.namespaces
-        }, {
-            method: 'get',
-            path: '/service/version/list',
-            value: ServiceController.namespaces
-        }, {
-            method: 'get',
-            path: '/service/name/list',
-            value: ServiceController.serviceNameForList
-        }, {
-            method: 'get',
             path: '/service/provider/list',
-            value: ServiceController.providers
-        }, {
-            method: 'get',
-            path: '/service/consumer/list',
             value: ServiceController.providers
         }, {
             method: 'get',

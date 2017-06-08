@@ -19,6 +19,8 @@ const ZookeeperOperation = class ZookeeperOperation {
         this.provider = [];
         this.consumer = [];
         this.address = [];
+        this.configurator = [];
+        this.router = [];
         logger.info(`zookeeper connect for ${config.zookeeper}`);
 
         // listener root
@@ -50,10 +52,14 @@ const ZookeeperOperation = class ZookeeperOperation {
         this.provider = [];
         this.consumer = [];
         this.address = [];
+        this.configurator = [];
+        this.router = [];
         let uniqueService = new Set();
         let uniqueProvider = new Set();
         let uniqueConsumer = new Set();
         let uniqueAddress = new Set();
+        let uniqueConfigurator = new Set();
+        let uniqueRouter = new Set();
         for (let [key, value] of this.cacheUrl) {
             if (!value || !Array.isArray(value) || !value.length) continue;
             let split = key.split('/');
@@ -104,6 +110,27 @@ const ZookeeperOperation = class ZookeeperOperation {
                         });
                     }
                 });
+            } else if (minimatch(key, `/${config.root}/*/*/*/configurators`)) {
+                value.forEach(v => {
+                    let p = QS.parse(v);
+                    p.namespace = split[2];
+                    p.name = split[3];
+                    p.version = split[4];
+                    if (!uniqueConfigurator.has(v)) {
+                        uniqueConfigurator.add(v);
+                        this.configurator.push(p);
+                    }
+                });
+            } else if (minimatch(key, `/${config.root}/*/*/*/routers`)) {
+                value.forEach(v => {
+                    let p = QS.parse(v);
+                    p.namespace = split[2];
+                    p.version = split[4];
+                    if (!uniqueRouter.has(v)) {
+                        uniqueRouter.add(v);
+                        this.router.push(p);
+                    }
+                });
             }
         }
     }
@@ -116,6 +143,25 @@ const ZookeeperOperation = class ZookeeperOperation {
     async enable(namespace, service, version, address) {
         address = {disabled: address};
         await pify(this.client.remove).apply(this.client, [`/${config.root}/${namespace}/${service}/${version}/configurators/${QS.stringify(address, null, null, {encodeURIComponent: (str) => {return str;}})}`, -1, null]);
+    }
+
+    async addRouter(namespace, service, version, value) {
+        value.namespace = namespace;
+        value.version = version;
+        let stringify = QS.stringify(value, null, null, {encodeURIComponent: (str) => {return str;}});
+        for(let r of this.router) {
+            let have = QS.stringify(r, null, null, {encodeURIComponent: (str) => {return str;}}) === stringify;
+            if (have) {
+                throw new Error('已经存在');
+            }
+        }
+        delete value.namespace;
+        delete value.version;
+        await pify(this.client.mkdirp).apply(this.client, [`/${config.root}/${namespace}/${service}/${version}/routers/${QS.stringify(value, null, null, {encodeURIComponent: (str) => {return str;}})}`, null]);
+    }
+
+    async removeRouter(namespace, service, version, value) {
+        await pify(this.client.remove).apply(this.client, [`/${config.root}/${namespace}/${service}/${version}/routers/${QS.stringify(value, null, null, {encodeURIComponent: (str) => {return str;}})}`, -1]);
     }
 
     async getConfigurators(namespace = '*', service = '*', version = '*') {

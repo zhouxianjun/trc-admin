@@ -6,7 +6,7 @@
 
                 <div class="box-tools pull-right">
                     <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
-                    <button type="button" class="btn btn-box-tool" data-bind="click: doQuery"><i class="glyphicon glyphicon-search"></i></button>
+                    <button type="button" class="btn btn-box-tool" @click="doQuery"><i class="glyphicon glyphicon-search"></i></button>
                 </div>
             </div>
             <div class="box-body">
@@ -14,13 +14,13 @@
                     <div class="col-sm-6">
                         <label>名称</label>
                         <div class="form-group">
-                            <input type="text" class="form-control pull-right">
+                            <input type="text" v-model="search.name" class="form-control pull-right">
                         </div>
                     </div>
                     <div class="col-sm-6">
                         <label>服务</label>
                         <div class="form-group">
-                            <input type="text" class="form-control pull-right">
+                            <input type="text" v-model="search.service" class="form-control pull-right">
                         </div>
                     </div>
                 </div>
@@ -28,13 +28,13 @@
                     <div class="col-sm-6">
                         <label>版本</label>
                         <div class="form-group">
-                            <input type="text" class="form-control pull-right">
+                            <input type="text" v-model="search.version" class="form-control pull-right">
                         </div>
                     </div>
                     <div class="col-sm-6">
                         <label>机器</label>
                         <div class="form-group">
-                            <input type="text" class="form-control pull-right">
+                            <input type="text" v-model="search.address" class="form-control pull-right">
                         </div>
                     </div>
                 </div>
@@ -48,7 +48,7 @@
                 </button>
             </div>
             <div class="panel-body">
-                <i-table :columns="table.columns" :data="table.data" :headerColor="`#fff`"></i-table>
+                <Table :columns="table.columns" :data="table.data" :headerColor="`#fff`"></Table>
             </div>
         </div>
         <Modal v-model="addRouterModel" title="新增路由" @on-ok="saveRouter">
@@ -58,7 +58,7 @@
                 </Form-item>
                 <Form-item label="服务" prop="service">
                     <Select @on-change="changeService" v-model="router.service" placeholder="请选择服务">
-                        <Option v-for="item in providers" :value="`${item.namespace}.${item.version}.${item.service}`" :key="item" v-html="`${item.namespace}.${item.version}.${item.service}`"></Option>
+                        <Option v-for="item in providers" :value="`${item.namespace}/${item.version}/${item.service}`" :key="item" v-html="`${item.namespace}.${item.version}.${item.service}`"></Option>
                     </Select>
                 </Form-item>
                 <Form-item label="方法" prop="method">
@@ -85,6 +85,19 @@
                     }"></i-tags-input>
                 </Form-item>
             </Form>
+        </Modal>
+        <Modal v-model="removeRouterModal" width="360">
+            <p slot="header" style="color:#f60;text-align:center">
+                <Icon type="information-circled"></Icon>
+                <span>删除确认</span>
+            </p>
+            <div style="text-align:center">
+                <p>确定删除 {{removeRouterName}} 吗?，删除后将无法恢复。</p>
+                <p>是否继续删除？</p>
+            </div>
+            <div slot="footer">
+                <Button type="error" size="large" @click="removeRouter">删除</Button>
+            </div>
         </Modal>
     </div>
 </template>

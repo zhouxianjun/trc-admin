@@ -1,7 +1,7 @@
 <script>
     import table from 'iview/src/components/table';
     export default {
-        name: 'i-table',
+        name: 'Table',
         props: {
             headerColor: {
                 type: String,
