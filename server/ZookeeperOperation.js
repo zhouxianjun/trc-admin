@@ -77,8 +77,9 @@ const ZookeeperOperation = class ZookeeperOperation {
                 value.forEach(v => {
                     let p = QS.parse(v);
                     p.namespace = split[2];
-                    p.name = split[3];
+                    p.service = split[3];
                     p.version = split[4];
+                    p.status = true;
                     if (!uniqueProvider.has(v)) {
                         uniqueProvider.add(v);
                         this.provider.push(p);
@@ -96,7 +97,7 @@ const ZookeeperOperation = class ZookeeperOperation {
                 value.forEach(v => {
                     let p = QS.parse(v);
                     p.namespace = split[2];
-                    p.name = split[3];
+                    p.service = split[3];
                     p.version = split[4];
                     if (!uniqueConsumer.has(v)) {
                         uniqueConsumer.add(v);
@@ -114,7 +115,7 @@ const ZookeeperOperation = class ZookeeperOperation {
                 value.forEach(v => {
                     let p = QS.parse(v);
                     p.namespace = split[2];
-                    p.name = split[3];
+                    p.service = split[3];
                     p.version = split[4];
                     if (!uniqueConfigurator.has(v)) {
                         uniqueConfigurator.add(v);
@@ -133,6 +134,20 @@ const ZookeeperOperation = class ZookeeperOperation {
                 });
             }
         }
+        await this.checkProviderStatus();
+    }
+
+    async checkProviderStatus() {
+        for (let c of this.configurator) {
+            if (c.disabled) {
+                let array = c.disabled.split(',');
+                for (let a of array) {
+                    for (let p of this.provider) {
+                        `${p.host}:${p.port}` === a && (p.status = false);
+                    }
+                }
+            }
+        }
     }
 
     async disable(namespace, service, version, address) {
@@ -142,7 +157,7 @@ const ZookeeperOperation = class ZookeeperOperation {
 
     async enable(namespace, service, version, address) {
         address = {disabled: address};
-        await pify(this.client.remove).apply(this.client, [`/${config.root}/${namespace}/${service}/${version}/configurators/${QS.stringify(address, null, null, {encodeURIComponent: (str) => {return str;}})}`, -1, null]);
+        await pify(this.client.remove).apply(this.client, [`/${config.root}/${namespace}/${service}/${version}/configurators/${QS.stringify(address, null, null, {encodeURIComponent: (str) => {return str;}})}`, -1]);
     }
 
     async addRouter(namespace, service, version, value) {

@@ -25,6 +25,7 @@
     "koa-static": "^3.0.0",
     "merge": "^1.2.0",
     "minimatch": "latest",
+    "moment": "^2.18.1",
     "node-zookeeper-client": "^0.2.2",
     "pify": "^2.3.0",
     "tracer": "^0.8.7",

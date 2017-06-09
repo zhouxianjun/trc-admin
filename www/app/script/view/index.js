@@ -26,8 +26,8 @@ export default {
                 sub: [{
                     id: 2,
                     icon: 'ios-navigate',
-                    name: '菜单->1',
-                    path: '/a',
+                    name: '提供者',
+                    path: '/provider',
                     pid: 1,
                     show: true
                 }, {

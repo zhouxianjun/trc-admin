@@ -22,6 +22,7 @@ export default {
             removeRouterModal: false,
             removeRouterName: '',
             removeRouterItem: null,
+            loadingBtn: false,
             table: {
                 columns: [{
                     type: 'expand',
@@ -64,7 +65,7 @@ export default {
                                         this.removeRouterModal = true;
                                     }
                                 }
-                            }, '删除')
+                            },  '删除')
                         ]);
                     }
                 }],
@@ -118,10 +119,11 @@ export default {
             delete this.removeRouterItem.namespace;
             delete this.removeRouterItem.version;
             delete this.removeRouterItem._index;
+            this.loadingBtn = true;
             await this.fetch('/router/remove', {method: 'post', data: this.removeRouterItem, params: params});
             this.removeRouterItem = null;
             this.removeRouterModal = false;
-            setTimeout(() => this.doQuery(), 500);
+            setTimeout(() => {this.doQuery();this.loadingBtn = false;}, 500);
         },
         saveRouter() {
             this.$refs['router'].validate(async (valid) => {
@@ -142,6 +144,7 @@ export default {
         async doQuery() {
             let routers = await this.fetch('/router/list', {params: this.search});
             routers && (this.table.data = routers.list || []);
+            this.loadingBtn = false;
         },
         changeService(val) {
             let methods = new Set();

@@ -5,6 +5,7 @@
 const ZookeeperOperation = require('../ZookeeperOperation');
 const Utils = require('../Utils');
 const Result = require('../dto/Result');
+const minimatch = require('minimatch');
 module.exports = class ServiceController {
     static get routers() {
         return [{
@@ -12,9 +13,13 @@ module.exports = class ServiceController {
             path: '/service/provider/list',
             value: ServiceController.providers
         }, {
-            method: 'get',
-            path: '/service/disable',
+            method: 'post',
+            path: '/service/provider/disable',
             value: ServiceController.disable
+        }, {
+            method: 'post',
+            path: '/service/provider/enable',
+            value: ServiceController.enable
         }];
     }
     static async list(ctx) {
@@ -62,10 +67,13 @@ module.exports = class ServiceController {
     }
 
     static async providers(ctx) {
-        let urls = ZookeeperOperation.getProviders(ctx.query.namespace, ctx.query.service, ctx.query.version);
         ctx.body = new Result(true, {
             key: 'list',
-            value: Utils.urlParse(urls)
+            value: ZookeeperOperation.provider.filter(r => {
+                return minimatch(r.service, ctx.query.service || '*') &&
+                    minimatch(r.version, ctx.query.version || '*') &&
+                    minimatch(r.namespace, ctx.query.namespace || '*')
+            })
         }).json;
     }
 
@@ -82,7 +90,11 @@ module.exports = class ServiceController {
     }
 
     static async disable(ctx) {
-        await ZookeeperOperation.disable(ctx.query.namespace, ctx.query.service, ctx.query.version, ctx.query.address);
-        ctx.body = {};
+        await ZookeeperOperation.disable(ctx.query.namespace, ctx.query.service, ctx.query.version, ctx.request.body.address);
+        ctx.body = new Result(true).json;
+    }
+    static async enable(ctx) {
+        await ZookeeperOperation.enable(ctx.query.namespace, ctx.query.service, ctx.query.version, ctx.request.body.address);
+        ctx.body = new Result(true).json;
     }
 };
