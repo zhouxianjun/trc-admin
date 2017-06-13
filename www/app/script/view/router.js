@@ -7,7 +7,6 @@ import iTagsInput from "../../components/iview-tags-input.vue";
 import Table from '../../components/i-table.vue';
 import routerDetail from '../../components/router-detail.vue';
 import Common from "../common";
-import merge from 'merge';
 export default {
     data() {
         return {
@@ -85,7 +84,7 @@ export default {
                 service: [{required: true, trigger: 'blur' }],
                 method: [{required: true, type: 'array', trigger: 'blur' }],
                 consumeHost: [{required: true, validator: Common.valid.ip, trigger: 'blur' }],
-                providerAddress: [{required: true, validator: Common.valid.ip, trigger: 'blur' }]
+                providerAddress: [{required: true, type: 'array', trigger: 'blur' }]
             }
         }
     },
@@ -112,29 +111,41 @@ export default {
     methods: {
         async removeRouter() {
             if (!this.removeRouterItem) return;
+            let body = Object.assign({}, this.removeRouterItem);
             let params = {
-                namespace: this.removeRouterItem.namespace,
-                version: this.removeRouterItem.version
+                namespace: body.namespace,
+                version: body.version,
+                service: body.service
             };
-            delete this.removeRouterItem.namespace;
-            delete this.removeRouterItem.version;
-            delete this.removeRouterItem._index;
+            delete body.namespace;
+            delete body.version;
+            delete body.service;
+            delete body._index;
             this.loadingBtn = true;
-            await this.fetch('/router/remove', {method: 'post', data: this.removeRouterItem, params: params});
+            let success = await this.fetch('/router/remove', {method: 'post', data: body, params: params});
+            if (success === false) {
+                this.loadingBtn = false;
+                return;
+            }
             this.removeRouterItem = null;
             this.removeRouterModal = false;
-            setTimeout(() => {this.doQuery();this.loadingBtn = false;}, 500);
+            setTimeout(() => this.doQuery(), 500);
         },
         saveRouter() {
             this.$refs['router'].validate(async (valid) => {
                 if (valid) {
-                    let body = merge.clone(this.router);
+                    let body = Object.assign({}, this.router);
                     let split = body.service.split('/');
-                    body.service = split[2];
-                    await this.fetch('/router/add', {method: 'post', data: body, params: {
+                    delete body.service;
+                    let success = await this.fetch('/router/add', {method: 'post', data: body, params: {
                         namespace: split[0],
-                        version: split[1]
+                        version: split[1],
+                        service: split[2]
                     }});
+                    if (success === false) {
+                        this.loadingBtn = false;
+                        return;
+                    }
                     setTimeout(() => this.doQuery(), 500);
                 } else {
                     this.$Message.error('表单验证失败!');

@@ -3,6 +3,7 @@
  */
 "use strict";
 import tableToolSwf from 'admin-lte/plugins/datatables/extensions/TableTools/swf/copy_csv_xls_pdf.swf';
+import moment from 'moment';
 // 重构Popper
 import Popper from 'popper.js';
 const _getPosition = Popper.prototype._getPosition;
@@ -12,7 +13,7 @@ Popper.prototype._getPosition = function(popper, reference) {
     }
     Reflect.apply(_getPosition, this, [popper, reference]);
 };
-export default {
+const Common = {
     /**
      * 获取浏览器高度
      * @returns {number}
@@ -87,7 +88,7 @@ export default {
                 callback(new Error(`不能为空`));
                 return;
             }
-            if (value !== undefined) {
+            if (value) {
                 value = Array.isArray(value) ? value : value.split(',');
                 for (let val of value) {
                     let split = val.split('.');
@@ -102,8 +103,17 @@ export default {
                         }
                     }
                 }
-                callback();
             }
+            callback();
+        }
+    },
+    dateFormat(val, format = 'YYYY-MM-DD HH:mm:ss') {
+        return moment(Number(val)).format(format);
+    },
+    RENDER: {
+        DATE(h, params) {
+            return h('span', Common.dateFormat(params.row[params.column.key]));
         }
     }
 }
+export default Common;

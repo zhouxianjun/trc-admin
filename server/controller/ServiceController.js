@@ -13,57 +13,38 @@ module.exports = class ServiceController {
             path: '/service/provider/list',
             value: ServiceController.providers
         }, {
+            method: 'get',
+            path: '/service/consumer/list',
+            value: ServiceController.consumers
+        }, {
             method: 'post',
             path: '/service/provider/disable',
-            value: ServiceController.disable
+            value: ServiceController.disableProvider
         }, {
             method: 'post',
             path: '/service/provider/enable',
-            value: ServiceController.enable
+            value: ServiceController.enableProvider
+        }, {
+            method: 'post',
+            path: '/service/consumer/disable',
+            value: ServiceController.disableConsumer
+        }, {
+            method: 'post',
+            path: '/service/consumer/enable',
+            value: ServiceController.enableConsumer
+        }, {
+            method: 'post',
+            path: '/service/consumer/shield',
+            value: ServiceController.shield
+        }, {
+            method: 'post',
+            path: '/service/consumer/recovery',
+            value: ServiceController.recovery
+        }, {
+            method: 'post',
+            path: '/service/provider/override',
+            value: ServiceController.override
         }];
-    }
-    static async list(ctx) {
-        let providers = ZookeeperOperation.getProviders(ctx.query.namespace, ctx.query.service, ctx.query.version);
-        let consumers = ZookeeperOperation.getConsumers(ctx.query.namespace, ctx.query.service, ctx.query.version);
-        let configurators = ZookeeperOperation.getConfigurators(ctx.query.namespace, ctx.query.service, ctx.query.version);
-        let ps = Utils.urlParse(providers);
-        let cs = Utils.urlParse(consumers);
-        let configs = Utils.urlParse(configurators);
-        let configMap = new Map();
-        let result = new Map();
-        for (let config of configs) {
-            let key = `${config.namespace}/${config.service}/${config.version}`;
-            if (!configMap.has(key)) {
-                configMap.set(key, config);
-            }
-        }
-        for (let p of ps) {
-            let key = `${p.namespace}/${p.service}/${p.version}`;
-            if (!result.has(key)) {
-                result.set(key, {
-                    providers: [p],
-                    consumers: [],
-                    service: p.service,
-                    namespace: p.namespace,
-                    version: p.version
-                });
-                continue;
-            }
-            let config = configMap.get(key);
-            p.disabled = config && config.disabled === `${p.host}:${p.port}`;
-            result.get(key).providers.push(p);
-        }
-        for (let c of cs) {
-            let key = `${c.namespace}/${c.service}/${c.version}`;
-            if (!result.has(key)) {
-                result.set(key, {
-                    consumers: [c]
-                });
-                continue;
-            }
-            result.get(key).consumers.push(c);
-        }
-        ctx.body = [...result.values()];
     }
 
     static async providers(ctx) {
@@ -78,23 +59,45 @@ module.exports = class ServiceController {
     }
 
     static async consumers(ctx) {
-        ctx.body = [...ZookeeperOperation.getConsumers(ctx.query.namespace, ctx.query.service, ctx.query.version)]
+        ctx.body = new Result(true, {
+            key: 'list',
+            value: ZookeeperOperation.consumer.filter(r => {
+                return minimatch(r.service, ctx.query.service || '*') &&
+                    minimatch(r.version, ctx.query.version || '*') &&
+                    minimatch(r.namespace, ctx.query.namespace || '*')
+            })
+        }).json;
     }
 
-    static async serviceNameForList(ctx) {
-        ctx.body = [...ZookeeperOperation.getServices(ctx.query.namespace, ctx.query.service)];
-    }
-
-    static async namespaces(ctx) {
-        ctx.body = [...ZookeeperOperation.namespace];
-    }
-
-    static async disable(ctx) {
-        await ZookeeperOperation.disable(ctx.query.namespace, ctx.query.service, ctx.query.version, ctx.request.body.address);
+    static async disableProvider(ctx) {
+        await ZookeeperOperation.create(ctx.query.namespace, ctx.query.service, ctx.query.version, 'configurators', {disabled: ctx.request.body.address});
         ctx.body = new Result(true).json;
     }
-    static async enable(ctx) {
-        await ZookeeperOperation.enable(ctx.query.namespace, ctx.query.service, ctx.query.version, ctx.request.body.address);
+    static async enableProvider(ctx) {
+        await ZookeeperOperation.remove(ctx.query.namespace, ctx.query.service, ctx.query.version, 'configurators', {disabled: ctx.request.body.address});
+        ctx.body = new Result(true).json;
+    }
+
+    static async disableConsumer(ctx) {
+        await ZookeeperOperation.create(ctx.query.namespace, ctx.query.service, ctx.query.version, 'configurators', {consumer_disabled: ctx.request.body.address});
+        ctx.body = new Result(true).json;
+    }
+    static async enableConsumer(ctx) {
+        await ZookeeperOperation.remove(ctx.query.namespace, ctx.query.service, ctx.query.version, 'configurators', {consumer_disabled: ctx.request.body.address});
+        ctx.body = new Result(true).json;
+    }
+
+    static async shield(ctx) {
+        await ZookeeperOperation.create(ctx.query.namespace, ctx.query.service, ctx.query.version, 'configurators', {shielded: ctx.request.body.address});
+        ctx.body = new Result(true).json;
+    }
+    static async recovery(ctx) {
+        await ZookeeperOperation.remove(ctx.query.namespace, ctx.query.service, ctx.query.version, 'configurators', {shielded: ctx.request.body.address});
+        ctx.body = new Result(true).json;
+    }
+
+    static async override(ctx) {
+        await ZookeeperOperation.override(ctx.query.namespace, ctx.query.service, ctx.query.version, ctx.query.address, ctx.request.body);
         ctx.body = new Result(true).json;
     }
 };

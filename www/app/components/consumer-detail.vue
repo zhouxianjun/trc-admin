@@ -6,16 +6,12 @@
                 <span v-html="dateFormat(detail.start)"></span>
             </div>
             <div class="col-md-2">
-                <label>预热:</label>
-                <span v-html="detail.warmup"></span>
-            </div>
-            <div class="col-md-2">
-                <label>权重:</label>
-                <span v-html="detail.weight"></span>
-            </div>
-            <div class="col-md-2">
                 <label>进程号:</label>
                 <span v-html="detail.pid"></span>
+            </div>
+            <div class="col-md-4">
+                <label>路由:</label>
+                <router-detail :detail="detail.router"></router-detail>
             </div>
         </div>
         <div class="row">
@@ -32,12 +28,16 @@
 </template>
 <script>
     import Common from '../script/common';
+    import routerDetail from './router-detail.vue';
     export default {
         props: {
             detail: Object
         },
         methods: {
             dateFormat: Common.dateFormat
+        },
+        components: {
+            routerDetail
         }
     }
 </script>

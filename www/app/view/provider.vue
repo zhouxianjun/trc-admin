@@ -48,13 +48,52 @@
                 <Table :columns="table.columns" :data="table.data" :headerColor="`#fff`"></Table>
             </div>
         </div>
-        <Modal v-model="disableProviderItem" width="360">
+        <Modal v-model="editModel" title="动态配置" @on-ok="override">
+            <Form ref="edit" :model="edit" :label-width="80" :rules="editValidate">
+                <Form-item label="HOST" prop="host">
+                    <Input :disabled="!overrideHost" v-model="edit.host" style="width: 200px"/>
+                    <i-switch style="margin-left: 5px" v-model="overrideHost">
+                        <Icon type="android-done" slot="open"></Icon>
+                        <Icon type="android-close" slot="close"></Icon>
+                    </i-switch>
+                </Form-item>
+                <Form-item label="端口" prop="port">
+                    <Input-number :disabled="!overridePort" :max="65535" :min="1" v-model="edit.port"></Input-number>
+                    <i-switch style="margin-left: 5px" v-model="overridePort">
+                        <Icon type="android-done" slot="open"></Icon>
+                        <Icon type="android-close" slot="close"></Icon>
+                    </i-switch>
+                </Form-item>
+                <Form-item label="权重" prop="weight">
+                    <Input-number :disabled="!overrideWeight" :max="99999" :min="0" v-model="edit.weight"></Input-number>
+                    <i-switch style="margin-left: 5px" v-model="overrideWeight">
+                        <Icon type="android-done" slot="open"></Icon>
+                        <Icon type="android-close" slot="close"></Icon>
+                    </i-switch>
+                </Form-item>
+                <Form-item label="预热" prop="warmup">
+                    <Input-number :disabled="!overrideWarmup" :max="99999999999" :min="0" v-model="edit.warmup"></Input-number>
+                    <i-switch style="margin-left: 5px" v-model="overrideWarmup">
+                        <Icon type="android-done" slot="open"></Icon>
+                        <Icon type="android-close" slot="close"></Icon>
+                    </i-switch>
+                </Form-item>
+                <Form-item label="属性" prop="attr">
+                    <Input :disabled="!overrideAttr" v-model="edit.attr" style="width: 200px"/>
+                    <i-switch style="margin-left: 5px" v-model="overrideAttr">
+                        <Icon type="android-done" slot="open"></Icon>
+                        <Icon type="android-close" slot="close"></Icon>
+                    </i-switch>
+                </Form-item>
+            </Form>
+        </Modal>
+        <Modal v-model="disableProviderModal" width="360">
             <p slot="header" style="color:#f60;text-align:center">
                 <Icon type="information-circled"></Icon>
                 <span>禁用确认</span>
             </p>
             <div style="text-align:center">
-                <p>确定禁用 {{disableProviderItem ? `${disableProviderItem.service}=>${disableProviderItem.host}:${disableProviderItem.port}` : ''}} 吗?</p>
+                <p>确定禁用 {{selectItem ? `${selectItem.service}=>${selectItem.host}:${selectItem.port}` : ''}} 吗?</p>
                 <p>是否继续禁用？</p>
             </div>
             <div slot="footer">

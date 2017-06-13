@@ -33,21 +33,16 @@ export default {
                 }, {
                     id: 3,
                     icon: 'ios-navigate',
-                    name: '路由规则',
-                    path: '/router',
+                    name: '消费者',
+                    path: '/consumer',
                     pid: 1,
                     show: true
                 }, {
                     id: 4,
                     icon: 'ios-navigate',
-                    name: '菜单->4',
+                    name: '路由规则',
+                    path: '/router',
                     pid: 1,
-                    sub: [{
-                        id: 5,
-                        name: 'test',
-                        path: '/a',
-                        show: true
-                    }],
                     show: true
                 }]
             }, {

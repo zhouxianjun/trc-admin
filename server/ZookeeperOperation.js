@@ -8,8 +8,8 @@ const config = require('../config.json');
 const pify = require('pify');
 const minimatch = require('minimatch');
 const util = require('util');
-const MAX_DEEP = 6;
 const QS = require('querystring');
+const MAX_DEEP = 6;
 const ZookeeperOperation = class ZookeeperOperation {
     constructor() {
         this.client = zookeeper.createClient(config.zookeeper, config.zookeeperOption || {});
@@ -80,6 +80,7 @@ const ZookeeperOperation = class ZookeeperOperation {
                     p.service = split[3];
                     p.version = split[4];
                     p.status = true;
+                    p._url = v;
                     if (!uniqueProvider.has(v)) {
                         uniqueProvider.add(v);
                         this.provider.push(p);
@@ -99,6 +100,9 @@ const ZookeeperOperation = class ZookeeperOperation {
                     p.namespace = split[2];
                     p.service = split[3];
                     p.version = split[4];
+                    p.status = true;
+                    p.shield = false;
+                    p._url = v;
                     if (!uniqueConsumer.has(v)) {
                         uniqueConsumer.add(v);
                         this.consumer.push(p);
@@ -117,6 +121,7 @@ const ZookeeperOperation = class ZookeeperOperation {
                     p.namespace = split[2];
                     p.service = split[3];
                     p.version = split[4];
+                    p._url = v;
                     if (!uniqueConfigurator.has(v)) {
                         uniqueConfigurator.add(v);
                         this.configurator.push(p);
@@ -126,7 +131,9 @@ const ZookeeperOperation = class ZookeeperOperation {
                 value.forEach(v => {
                     let p = QS.parse(v);
                     p.namespace = split[2];
+                    p.service = split[3];
                     p.version = split[4];
+                    p._url = v;
                     if (!uniqueRouter.has(v)) {
                         uniqueRouter.add(v);
                         this.router.push(p);
@@ -135,6 +142,7 @@ const ZookeeperOperation = class ZookeeperOperation {
             }
         }
         await this.checkProviderStatus();
+        await this.checkConsumerStatus();
     }
 
     async checkProviderStatus() {
@@ -143,40 +151,83 @@ const ZookeeperOperation = class ZookeeperOperation {
                 let array = c.disabled.split(',');
                 for (let a of array) {
                     for (let p of this.provider) {
-                        `${p.host}:${p.port}` === a && (p.status = false);
+                        (`${p.host}:${p.port}` === a && this.isSame(p, c)) && (p.status = false);
                     }
+                }
+            }
+            if (c.override) {
+                for (let p of this.provider) {
+                    (`${p.host}:${p.port}` === c.override && this.isSame(p, c)) && Reflect.ownKeys(p).forEach(key => {
+                        c[key] !== undefined && (p[key] = c[key]);
+                    });
                 }
             }
         }
     }
 
-    async disable(namespace, service, version, address) {
-        address = {disabled: address};
-        await pify(this.client.mkdirp).apply(this.client, [`/${config.root}/${namespace}/${service}/${version}/configurators/${QS.stringify(address, null, null, {encodeURIComponent: (str) => {return str;}})}`, null]);
+    async checkConsumerStatus() {
+        for (let c of this.configurator) {
+            if (c['consumer_disabled']) {
+                let array = c['consumer_disabled'].split(',');
+                for (let a of array) {
+                    for (let p of this.consumer) {
+                        (`${p.host}` === a && this.isSame(p, c)) && (p.status = false);
+                    }
+                }
+            }
+            if (c['shielded']) {
+                let array = c['shielded'].split(',');
+                for (let a of array) {
+                    for (let p of this.consumer) {
+                        (`${p.host}` === a && this.isSame(p, c)) && (p.shield = true);
+                    }
+                }
+            }
+        }
+
+        for (let r of this.router) {
+            for (let p of this.consumer) {
+                (minimatch(p.host, r.consumeHost) && this.isSame(p, r)) && (p.router = r);
+            }
+        }
     }
 
-    async enable(namespace, service, version, address) {
-        address = {disabled: address};
-        await pify(this.client.remove).apply(this.client, [`/${config.root}/${namespace}/${service}/${version}/configurators/${QS.stringify(address, null, null, {encodeURIComponent: (str) => {return str;}})}`, -1]);
+    async override(namespace, service, version, address, props) {
+        for (let config of this.configurator) {
+            if (config.override && config.override === address) {
+                await this.remove(namespace, service, version, 'configurators', config._url);
+            }
+        }
+        if (!props) {
+            return;
+        }
+        Object.keys(props).forEach(key => {props[key] === '' && Reflect.deleteProperty(props, key)});
+        let config = Object.assign({override: address}, props);
+        config._url = QS.stringify(config, null, null, {encodeURIComponent: (str) => {return str;}});
+        await this.create(namespace, service, version, 'configurators', config._url);
     }
 
     async addRouter(namespace, service, version, value) {
-        value.namespace = namespace;
-        value.version = version;
         let stringify = QS.stringify(value, null, null, {encodeURIComponent: (str) => {return str;}});
         for(let r of this.router) {
-            let have = QS.stringify(r, null, null, {encodeURIComponent: (str) => {return str;}}) === stringify;
-            if (have) {
+            if (r._url === stringify) {
                 throw new Error('已经存在');
             }
         }
-        delete value.namespace;
-        delete value.version;
-        await pify(this.client.mkdirp).apply(this.client, [`/${config.root}/${namespace}/${service}/${version}/routers/${QS.stringify(value, null, null, {encodeURIComponent: (str) => {return str;}})}`, null]);
+        await this.create(namespace, service, version, 'routers', value);
     }
 
     async removeRouter(namespace, service, version, value) {
-        await pify(this.client.remove).apply(this.client, [`/${config.root}/${namespace}/${service}/${version}/routers/${QS.stringify(value, null, null, {encodeURIComponent: (str) => {return str;}})}`, -1]);
+        await this.remove(namespace, service, version, 'routers', value);
+    }
+
+    async create(namespace, service, version, path, value) {
+        value = typeof value === 'object' ? QS.stringify(value, null, null, {encodeURIComponent: (str) => {return str;}}) : value;
+        await pify(this.client.mkdirp).apply(this.client, [`/${config.root}/${namespace}/${service}/${version}/${path}/${value}`, null]);
+    }
+    async remove(namespace, service, version, path, value) {
+        value = typeof value === 'object' ? QS.stringify(value, null, null, {encodeURIComponent: (str) => {return str;}}) : value;
+        await pify(this.client.remove).apply(this.client, [`/${config.root}/${namespace}/${service}/${version}/${path}/${value}`, -1]);
     }
 
     async getConfigurators(namespace = '*', service = '*', version = '*') {
@@ -189,6 +240,10 @@ const ZookeeperOperation = class ZookeeperOperation {
             }
         }
         return result;
+    }
+
+    isSame(a, b) {
+        return a.namespace === b.namespace && a.version === b.version && a.service === b.service;
     }
 
     getServices(namespace = '*', service = '*') {

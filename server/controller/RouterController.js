@@ -23,12 +23,12 @@ module.exports = class RouterController {
         }];
     }
     static async add(ctx) {
-        await ZookeeperOperation.addRouter(ctx.query.namespace, ctx.request.body.service, ctx.query.version, ctx.request.body);
+        await ZookeeperOperation.addRouter(ctx.query.namespace, ctx.query.service, ctx.query.version, ctx.request.body);
         ctx.body = new Result(true).json;
     }
 
     static async remove(ctx) {
-        await ZookeeperOperation.removeRouter(ctx.query.namespace, ctx.request.body.service, ctx.query.version, ctx.request.body);
+        await ZookeeperOperation.removeRouter(ctx.query.namespace, ctx.query.service, ctx.query.version, ctx.request.body._url);
         ctx.body = new Result(true).json;
     }
 

@@ -5,6 +5,7 @@ import Index from '../view/index.vue';
 import Home from '../view/home.vue';
 import Router from '../view/router.vue';
 import Provider from '../view/provider.vue';
+import Consumer from '../view/consumer.vue';
 export default [{
     path: '/',
     component: Index,
@@ -17,5 +18,8 @@ export default [{
     }, {
         path: 'provider',
         component: Provider
+    }, {
+        path: 'consumer',
+        component: Consumer
     }]
 }]

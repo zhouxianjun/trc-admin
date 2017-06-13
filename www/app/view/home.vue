@@ -77,6 +77,7 @@
     </div>
 </template>
 <script>
+    import Common from '../script/common';
     export default {
         data() {
             return {
@@ -97,7 +98,7 @@
                             key: 'namespace'
                         }, {
                             title: '服务名',
-                            key: 'name'
+                            key: 'service'
                         }, {
                             title: '版本号',
                             key: 'version'
@@ -112,7 +113,8 @@
                             key: 'weight'
                         }, {
                             title: '启动时间',
-                            key: 'start'
+                            key: 'start',
+                            render: Common.RENDER.DATE
                         }],
                         data: []
                     },
@@ -122,7 +124,7 @@
                             key: 'namespace'
                         }, {
                             title: '服务名',
-                            key: 'name'
+                            key: 'service'
                         }, {
                             title: '版本号',
                             key: 'version'
@@ -134,10 +136,14 @@
                             key: 'status'
                         }, {
                             title: '路由',
-                            key: 'router'
+                            key: 'router',
+                            render(h, params) {
+                                return h('span', params.row.router ? params.row.router.name : '未路由');
+                            }
                         }, {
                             title: '启动时间',
-                            key: 'start'
+                            key: 'start',
+                            render: Common.RENDER.DATE
                         }],
                         data: []
                     },

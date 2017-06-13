@@ -3,8 +3,7 @@
  */
 'use strict';
 import Table from "../../components/i-table.vue";
-import providerDetail from "../../components/provider-detail.vue";
-import Common from '../common';
+import consumerDetail from "../../components/consumer-detail.vue";
 export default {
     data() {
         return {
@@ -14,7 +13,8 @@ export default {
                 version: '*',
                 address: '*'
             },
-            disableProviderModal: false,
+            disableModal: false,
+            shieldModal: false,
             selectItem: null,
             loadingBtn: false,
             table: {
@@ -22,7 +22,7 @@ export default {
                     type: 'expand',
                     width: 50,
                     render: (h, params) => {
-                        return h(providerDetail, {
+                        return h(consumerDetail, {
                             props: {
                                 detail: params.row
                             }
@@ -41,7 +41,7 @@ export default {
                     title: '机器地址',
                     key: 'address',
                     render: (h, params) => {
-                        return h('div', `${params.row.host}:${params.row.port}`);
+                        return h('div', `${params.row.host}`);
                     }
                 }, {
                     title: '操作',
@@ -63,50 +63,34 @@ export default {
                                     click: async () => {
                                         if (params.row.status) {
                                             this.selectItem = params.row;
-                                            this.disableProviderModal = true;
+                                            this.disableModal = true;
                                         } else {
-                                            await this.enableProvider(params.row);
+                                            await this.enableConsumer(params.row);
                                         }
                                     }
                                 }
                             }, params.row.status ? '禁用' : '启用'),
                             h('Button', {
                                 props: {
-                                    type: 'primary',
+                                    type: params.row.shield ? 'success' : 'error',
                                     size: 'small',
                                     loading: this.loadingBtn
                                 },
                                 on: {
                                     click: async () => {
-                                        this.selectItem = params.row;
-                                        Object.keys(this.edit).forEach(key => this.edit[key] = isNaN(params.row[key]) ? params.row[key] : Number(params.row[key]));
-                                        this.editModel = true;
+                                        if (!params.row.shield) {
+                                            this.selectItem = params.row;
+                                            this.shieldModal = true;
+                                        } else {
+                                            await this.recoveryConsumer(params.row);
+                                        }
                                     }
                                 }
-                            }, '动态配置')
+                            }, params.row.shield ? '恢复' : '屏蔽')
                         ]);
                     }
                 }],
                 data: []
-            },
-            editModel: false,
-            overridePort: false,
-            overrideWeight: false,
-            overrideWarmup: false,
-            overrideHost: false,
-            overrideAttr: false,
-            edit: {
-                host: '',
-                port: undefined,
-                weight: undefined,
-                warmup: undefined,
-                attr: ''
-            },
-            editValidate: {
-                host: [{validator: Common.valid.ip, trigger: 'blur' }],
-                port: [{type: 'number', min: 1, max: 65535, trigger: 'blur' }],
-                weight: [{type: 'number', min: 0, max: 99999, trigger: 'blur' }],
-                warmup: [{type: 'number', min: 0, max: 99999999999, trigger: 'blur' }]
             }
         }
     },
@@ -117,34 +101,7 @@ export default {
         Table
     },
     methods: {
-        override() {
-            this.$refs['edit'].validate(async (valid) => {
-                if (valid) {
-                    let body = Object.assign({}, this.edit);
-                    this.overridePort || Reflect.deleteProperty(body, 'port');
-                    this.overrideWeight || Reflect.deleteProperty(body, 'weight');
-                    this.overrideWarmup || Reflect.deleteProperty(body, 'warmup');
-                    this.overrideHost || Reflect.deleteProperty(body, 'host');
-                    this.overrideAttr || Reflect.deleteProperty(body, 'attr');
-                    let success = await this.fetch('/service/provider/override', {method: 'post', data: body, params: {
-                        namespace: this.selectItem.namespace,
-                        version: this.selectItem.version,
-                        service: this.selectItem.service,
-                        address: `${this.selectItem.host}:${this.selectItem.port}`
-                    }});
-                    if (success === false) {
-                        this.loadingBtn = false;
-                        return;
-                    }
-                    this.selectItem = null;
-                    this.editModel = false;
-                    setTimeout(() => this.doQuery(), 500);
-                } else {
-                    this.$Message.error('表单验证失败!');
-                }
-            })
-        },
-        async disableProvider() {
+        async disableConsumer() {
             if (!this.selectItem) return;
             let params = {
                 namespace: this.selectItem.namespace,
@@ -152,23 +109,54 @@ export default {
                 service: this.selectItem.service
             };
             this.loadingBtn = true;
-            let success = await this.fetch('/service/provider/disable', {method: 'post', data: {address: `${this.selectItem.host}:${this.disableProviderItem.port}`}, params: params});
+            let success = await this.fetch('/service/consumer/disable', {method: 'post', data: {address: `${this.selectItem.host}`}, params: params});
             if (success === false) {
                 this.loadingBtn = false;
                 return;
             }
             this.selectItem = null;
-            this.disableProviderModal = false;
+            this.disableModal = false;
             setTimeout(() => this.doQuery(), 500);
         },
-        async enableProvider(item) {
+        async enableConsumer(item) {
             let params = {
                 namespace: item.namespace,
                 version: item.version,
                 service: item.service
             };
             this.loadingBtn = true;
-            let success = await this.fetch('/service/provider/enable', {method: 'post', data: {address: `${item.host}:${item.port}`}, params: params});
+            let success = await this.fetch('/service/consumer/enable', {method: 'post', data: {address: `${item.host}`}, params: params});
+            if (success === false) {
+                this.loadingBtn = false;
+                return;
+            }
+            setTimeout(() => this.doQuery(), 500);
+        },
+        async shieldConsumer() {
+            if (!this.selectItem) return;
+            let params = {
+                namespace: this.selectItem.namespace,
+                version: this.selectItem.version,
+                service: this.selectItem.service
+            };
+            this.loadingBtn = true;
+            let success = await this.fetch('/service/consumer/shield', {method: 'post', data: {address: `${this.selectItem.host}`}, params: params});
+            if (success === false) {
+                this.loadingBtn = false;
+                return;
+            }
+            this.selectItem = null;
+            this.shieldModal = false;
+            setTimeout(() => this.doQuery(), 500);
+        },
+        async recoveryConsumer(item) {
+            let params = {
+                namespace: item.namespace,
+                version: item.version,
+                service: item.service
+            };
+            this.loadingBtn = true;
+            let success = await this.fetch('/service/consumer/recovery', {method: 'post', data: {address: `${item.host}`}, params: params});
             if (success === false) {
                 this.loadingBtn = false;
                 return;
@@ -176,7 +164,7 @@ export default {
             setTimeout(() => this.doQuery(), 500);
         },
         async doQuery() {
-            let routers = await this.fetch('/service/provider/list', {params: this.search});
+            let routers = await this.fetch('/service/consumer/list', {params: this.search});
             routers && (this.table.data = routers.list || []);
             this.loadingBtn = false;
         }
