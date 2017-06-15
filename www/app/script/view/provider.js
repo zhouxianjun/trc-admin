@@ -90,21 +90,15 @@ export default {
                 data: []
             },
             editModel: false,
-            overridePort: false,
             overrideWeight: false,
             overrideWarmup: false,
-            overrideHost: false,
             overrideAttr: false,
             edit: {
-                host: '',
-                port: undefined,
                 weight: undefined,
                 warmup: undefined,
                 attr: ''
             },
             editValidate: {
-                host: [{validator: Common.valid.ip, trigger: 'blur' }],
-                port: [{type: 'number', min: 1, max: 65535, trigger: 'blur' }],
                 weight: [{type: 'number', min: 0, max: 99999, trigger: 'blur' }],
                 warmup: [{type: 'number', min: 0, max: 99999999999, trigger: 'blur' }]
             }
@@ -121,10 +115,8 @@ export default {
             this.$refs['edit'].validate(async (valid) => {
                 if (valid) {
                     let body = Object.assign({}, this.edit);
-                    this.overridePort || Reflect.deleteProperty(body, 'port');
                     this.overrideWeight || Reflect.deleteProperty(body, 'weight');
                     this.overrideWarmup || Reflect.deleteProperty(body, 'warmup');
-                    this.overrideHost || Reflect.deleteProperty(body, 'host');
                     this.overrideAttr || Reflect.deleteProperty(body, 'attr');
                     let success = await this.fetch('/service/provider/override', {method: 'post', data: body, params: {
                         namespace: this.selectItem.namespace,

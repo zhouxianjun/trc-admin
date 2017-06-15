@@ -230,56 +230,8 @@ const ZookeeperOperation = class ZookeeperOperation {
         await pify(this.client.remove).apply(this.client, [`/${config.root}/${namespace}/${service}/${version}/${path}/${value}`, -1]);
     }
 
-    async getConfigurators(namespace = '*', service = '*', version = '*') {
-        let result = new Set();
-        for (let [key, value] of this.cacheUrl) {
-            if (!value || !Array.isArray(value) || !minimatch(key, `/${config.root}/${namespace}/${service}/${version}/configurators`)) continue;
-            let split = key.split('/');
-            for (let v of value) {
-                result.add(`${v}&namespace=${split[2]}&service=${split[3]}&version=${split[4]}`);
-            }
-        }
-        return result;
-    }
-
     isSame(a, b) {
         return a.namespace === b.namespace && a.version === b.version && a.service === b.service;
-    }
-
-    getServices(namespace = '*', service = '*') {
-        let result = new Set();
-        for (let [key, value] of this.cacheUrl) {
-            if (!value || !Array.isArray(value) || !minimatch(key, `/${config.root}/${namespace}`)) continue;
-            for (let v of value) {
-                if (!minimatch(v, service)) continue;
-                result.add(v);
-            }
-        }
-        return result;
-    }
-
-    getProviders(namespace = '*', service = '*', version = '*') {
-        let result = new Set();
-        for (let [key, value] of this.cacheUrl) {
-            if (!value || !Array.isArray(value) || !minimatch(key, `/${config.root}/${namespace}/${service}/${version}/providers`)) continue;
-            let split = key.split('/');
-            for (let v of value) {
-                result.add(`${v}&namespace=${split[2]}&service=${split[3]}&version=${split[4]}`);
-            }
-        }
-        return result;
-    }
-
-    getConsumers(namespace = '*', service = '*', version = '*') {
-        let result = new Set();
-        for (let [key, value] of this.cacheUrl) {
-            if (!value || !Array.isArray(value) || !minimatch(key, `/${config.root}/${namespace}/${service}/${version}/consumers`)) continue;
-            let split = key.split('/');
-            for (let v of value) {
-                result.add(`${v}&namespace=${split[2]}&service=${split[3]}&version=${split[4]}`);
-            }
-        }
-        return result;
     }
 };
 

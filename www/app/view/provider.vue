@@ -50,20 +50,6 @@
         </div>
         <Modal v-model="editModel" title="动态配置" @on-ok="override">
             <Form ref="edit" :model="edit" :label-width="80" :rules="editValidate">
-                <Form-item label="HOST" prop="host">
-                    <Input :disabled="!overrideHost" v-model="edit.host" style="width: 200px"/>
-                    <i-switch style="margin-left: 5px" v-model="overrideHost">
-                        <Icon type="android-done" slot="open"></Icon>
-                        <Icon type="android-close" slot="close"></Icon>
-                    </i-switch>
-                </Form-item>
-                <Form-item label="端口" prop="port">
-                    <Input-number :disabled="!overridePort" :max="65535" :min="1" v-model="edit.port"></Input-number>
-                    <i-switch style="margin-left: 5px" v-model="overridePort">
-                        <Icon type="android-done" slot="open"></Icon>
-                        <Icon type="android-close" slot="close"></Icon>
-                    </i-switch>
-                </Form-item>
                 <Form-item label="权重" prop="weight">
                     <Input-number :disabled="!overrideWeight" :max="99999" :min="0" v-model="edit.weight"></Input-number>
                     <i-switch style="margin-left: 5px" v-model="overrideWeight">
